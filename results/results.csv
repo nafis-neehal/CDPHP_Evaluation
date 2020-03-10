@@ -1,0 +1,4 @@
+experiment,date,pred_dir,pred_file,n,range,log_loss,roc_auc_score
+All Tests,2020-03-10 16:38:34.212578,../data/predictions/tests/,tests_100_shift12.csv,12.0,201701-201704,5.756462732485114,0.5
+All Tests,2020-03-10 16:38:34.239007,../data/predictions/tests/,tests_100_shift12.csv,12.0,201701-201707,11.512925464970229,0.5
+All Tests,2020-03-10 16:38:34.263908,../data/predictions/tests/,tests_100_shift12.csv,12.0,201701-201801,17.269388197455342,0.5
