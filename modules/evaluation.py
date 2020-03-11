@@ -75,7 +75,7 @@ def score_times(c_p, c_r, c_e, ref=pd.DataFrame(), pred=pd.DataFrame() ):
     #Initialize a results data frame.
     results=pd.DataFrame()
     row=0
-
+    #Loop through different windows. 
     for w in c_e['landmarks']:
         start=c_e['eval_date']+pd.DateOffset(months=w[0])
         end=c_e['eval_date']+pd.DateOffset(months=w[1])
@@ -103,18 +103,38 @@ def score_times(c_p, c_r, c_e, ref=pd.DataFrame(), pred=pd.DataFrame() ):
         results.loc[row, 'range']=label
         results.loc[row, 'log_loss'] = log_loss(y, pred[c_e['pred_target']])
         results.loc[row, 'roc_auc_score'] = roc_auc_score(y, pred[c_e['pred_target']])
-          #loop through to evaluate for different K
-        # #for lim in c_e['k']:
-        # #    results.loc[row, 'precision@'+str(lim)]=precision_score(y, pred[c_e['pred_target']])
-        #     results.loc[row, 'recall@'+str(lim)]=recall_score(y, pred[c_e['pred_target']])
-        #     results.loc[row, 'accuracy@'+str(lim)]=accuracy_score(y, pred[c_e['pred_target']])
-        #     results.loc[row, 'balanced_accuracy@'+str(lim)]=balanced_accuracy_score(y, pred[c_e['pred_target']])
-        #     results.loc[row, 'f1@'+str(lim)]=f1_score(y, pred[c_e['pred_target']])
+
+        for k in c_e['k']:
+            col_label='_'+c_e['ref_target']+'_@k='+str(k)
+            pred[col_label] = prob_to_bin(pred[c_e['pred_target']], k)
+            results=add_results(results, row, y, pred[col_label], col_label)
+
+        for p in c_e['thresholds']:
+            col_label='_'+c_e['ref_target']+'_p>'+str(p)
+            pred[col_label] = np.where(pred[c_e['pred_target']] > p, 1, 0)
+            results=add_results(results, row, y, pred[col_label], col_label)
         row=row+1
     if c_e['save']:
         results_file=c_e['dir']+c_e['file']
         if c_e['append'] and os.path.exists(results_file):
             with open(results_file, 'a') as f:
-                results.to_csv(f, header=False)
+                results.to_csv(f, header=False, index = False)
         else:
             results.to_csv(results_file, index = False)
+    return results
+
+def add_results(results, row, y, predictions, text):
+    results.loc[row, 'precision'+text]=precision_score(y, predictions)
+    results.loc[row, 'recall'+text]=recall_score(y, predictions)
+    results.loc[row, 'accuracy'+text]=accuracy_score(y, predictions)
+    results.loc[row, 'balanced_accuracy'+text]=balanced_accuracy_score(y, predictions)
+    results.loc[row, 'f1'+text]=f1_score(y, predictions)
+    return results
+
+
+
+def prob_to_bin(target, k):
+    ind=np.argpartition(target, -k)[-k:]
+    target_bin=np.zeros(len(target))
+    target_bin[ind]=1
+    return target_bin
