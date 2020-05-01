@@ -4,6 +4,7 @@ from pathlib import Path
 import pandas as pd
 import numpy as np
 from sklearn.metrics import precision_score, accuracy_score, recall_score, balanced_accuracy_score, f1_score, roc_auc_score, log_loss, roc_curve
+import itertools
 
 def preprocess_referrals(c_r, drop_duplicates=True ):
     """
@@ -59,19 +60,22 @@ def score_times(c_p, c_r, c_e, ref=pd.DataFrame(), pred=pd.DataFrame() ):
     #Create a wide version of the target column
     ref['datetime']=pd.to_datetime(ref[c_r['date_col_out']], format= c_r['date_for_out'])
     ref_w=ref.pivot_table(index=c_r['per_col'], columns='datetime', values=c_e['ref_target'], aggfunc='sum')
-
+    ref_w=ref_w.fillna(0) #fill in NA so sums correctly. 
+    
     if pred.empty == True:
         pred_file=c_p['dir']+c_p['file']
         print("Loading predictions dataframe..", c_p['file'])
         pred=pd.read_csv(pred_file)
+        print("Shape of referrals dataframe:", pred.shape)
     else:
         print("Shape of referrals dataframe:", pred.shape)
 
     #Reduce to the prediction being evaluated.
     pred['datetime']=pd.to_datetime(pred[c_p['date_col']], format= c_p['date_for'])
-
+    
     pred=pred.loc[pred['datetime']==c_e['eval_date'],[c_p['per_col'],'datetime',c_e['pred_target']]]
-
+    print("Shape of referrals dataframe:", pred.shape)
+ 
     #Initialize a results data frame.
     results=pd.DataFrame()
     row=0
@@ -80,23 +84,28 @@ def score_times(c_p, c_r, c_e, ref=pd.DataFrame(), pred=pd.DataFrame() ):
         start=c_e['eval_date']+pd.DateOffset(months=w[0])
         end=c_e['eval_date']+pd.DateOffset(months=w[1])
         label=start.strftime(c_r['date_for_out'])+'-'+ end.strftime(c_r['date_for_out'])
-        print("Evaluating from:", label)
+        print("Splitting dataset for evaluation at", c_e['eval_date'], "Evaluating from:", label)
         sl=slice(start,end)
         #take slice based on window
-        y= ref_w.loc[:,sl].sum(axis=1)#take slice based on window
+        ref_w=ref_w.fillna(0)
+        y= ref_w.loc[:,sl]#take slice based on window
+        print("Examining Columns Slice:", str(y.columns))
+        y= y.sum(axis=1)#take slice based on window
         #If more than 1 referral in window, recode to 1
         y[y>1]=1
         #filter out people who arn't in the pred
         y=y[y.index.isin(pred[c_p['per_col']])]
+        #print("after filtering out people not in prediction", pred.shape[0], len(y))
+        
         #add 0s for people who aren't in ref.
         y=y.append(pd.Series(0,index=set(pred[c_p['per_col']])-set(y.index))).sort_index()
-
-        #if pred.shape[0]!=len(y):
-        #    print("df with ",y, " people;",pred.shape[0], " predictions" )
-        #    exit
-
+        #print("after adding in 0s", pred.shape[0], len(y))
+        
+        if pred.shape[0]!=len(y):
+            print("ERROR: PREDICTION AND ACTUAL DATAFRAME HAVE DIFFERENT NUMBERS.  PREDICTION:",pred.shape[0], " EVALUATION: ",len(y))
+            break
         results.loc[row, 'experiment']=c_e['experiment']
-        results.loc[row, 'date']=pd.Timestamp.now(tz=None)
+        results.loc[row, 'start_time']=pd.Timestamp.now(tz=None)
         results.loc[row, 'pred_dir']=c_p['dir']
         results.loc[row, 'pred_file']=c_p['file']
         results.loc[row, 'n'] = pred.shape[0]
@@ -113,6 +122,8 @@ def score_times(c_p, c_r, c_e, ref=pd.DataFrame(), pred=pd.DataFrame() ):
             col_label='_'+c_e['ref_target']+'_p>'+str(p)
             pred[col_label] = np.where(pred[c_e['pred_target']] > p, 1, 0)
             results=add_results(results, row, y, pred[col_label], col_label)
+        results.loc[row, 'end_time']=pd.Timestamp.now(tz=None)
+        results.loc[row, 'elapsed_time']=results.loc[row, 'end_time']- results.loc[row, 'start_time']
         row=row+1
     if c_e['save']:
         results_file=c_e['dir']+c_e['file']
@@ -133,6 +144,50 @@ def add_results(results, row, y, predictions, text):
 
 
 
+#merge needs to fill some NAs. 
+def fill_na(df, patterns, value, c_type):
+    for pattern in patterns:
+        cols=df.columns[df.columns.str.contains(pattern)]
+        for x in cols:
+            df[x]=df[x].fillna(value).astype(c_type)
+    return df
+
+
+def generate_test_prediction_files(c_p, c_r, patients, startdate, enddate):
+    """
+    This takes data and backs into 
+    """
+    ref=pd.read_csv(c_r['dir']+c_r['file'])
+    ref, trans = preprocess_referrals(c_r)
+    cols=['ref','lab_1','lab_2','lab_3']
+    pcols=['pref','plab_1','plab_2','plab_3']
+    #Create a starter matrix with all 0
+    s1 = pd.Series(range(0,patients))
+    s2 = pd.date_range(startdate,enddate, freq='MS').strftime("%Y%m").astype(int)
+    pred = pd.DataFrame(list(itertools.product(s1,s2)),columns=[c_p['per_col'],c_p['date_col']])
+    for col in pcols:
+        pred[col]=0
+    
+    df_dates_ref=pd.DataFrame()
+    ref_temp=ref.copy()
+    df_dates_ref['datetime']=pd.to_datetime(ref[c_r['date_col_out']], format= c_r['date_for_out'])
+    #Loop through -12 months to +12 by 6 month. 
+    for x in range(-12,13,6):
+        ref_temp=ref.copy()
+        sh="shift"+str(x)
+        print(sh)
+        df_dates_ref[sh]= df_dates_ref['datetime']+ pd.DateOffset(months=x)
+        df_dates_ref[sh]=df_dates_ref[sh].dt.strftime(c_r['date_for_out']).astype(int)
+        ref_temp[c_r['date_col_out']]=df_dates_ref[sh]
+        df=pd.merge(pred, ref_temp, how='left',  on=[c_r['per_col'], c_r['date_col_out']])
+        df=fill_na(df,['lab_','ref'],0, int)
+        df[pcols]=df[cols]
+        df.drop(columns=cols, inplace=True, axis=0)
+        print("Saving dataframe.  Records:", df.shape[0], "Patients",patients)
+        df.to_csv('../data/predictions/tests/tests_100_'+sh+'.csv', index=False)
+        df[df==1]=0.75
+        df.to_csv('../data/predictions/tests/tests_75_'+sh+'.csv', index=False)
+        
 def prob_to_bin(target, k):
     ind=np.argpartition(target, -k)[-k:]
     target_bin=np.zeros(len(target))
