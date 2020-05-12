@@ -6,40 +6,68 @@ import numpy as np
 from sklearn.metrics import precision_score, accuracy_score, recall_score, balanced_accuracy_score, f1_score, roc_auc_score, log_loss, roc_curve
 import itertools
 
-def preprocess_referrals(c_r, drop_duplicates=True ):
+def preprocess_referrals(c_r, drop_duplicates=True):
     """
     Preprocess referral data, aggregating reason codes, and referrals.
     """
+    #ref (dataframe) = "/data/referrals/test.csv" - ['person_id', 'date', 'class'] - 23 referrals
     ref=pd.read_csv(c_r['dir']+c_r['file'])
-    #Translate Dates to the datetime format.
+
+    '''Translate Dates to the datetime format and then to int in two different columns'''
+    #converts the ref['date'] column to datetime format and puts the converted values to a new column ref['datetime']
+    #ref['date'] = '1/1/2017' -> ref['datetime'] = '2017-01-01'
     ref['datetime']=pd.to_datetime(ref[c_r['date_col_in']], format= c_r['date_for_in'])
+    #new column yyyymm (int) = convert datetime to an int
+    #2017-01-01 -> 201701
     ref[c_r['date_col_out']]=ref['datetime'].dt.strftime(c_r['date_for_out']).astype(int)
 
+    ''' Get all the unique value from ref['class'] column and map 1...n for each value, zip in translate dictionary '''
     #This creates a class number for each reason code
     trans=ref[c_r['reason_col']].unique()
     translate=dict(zip(ref[c_r['reason_col']].unique(),[x for x in range(1,len(trans)+1)]))
 
+    ''' Select important columns ref['person_id', 'yyyymm', 'class', 'datetime']'''
     #Select only the important columns.
     ref=ref.loc[:,[c_r['per_col'],c_r['date_col_out'], c_r['reason_col'],'datetime']]
 
-    #This creates a column with a label consistent with translation.
+    '''This creates a column with a label consistent with translation.'''
+    #ref['person_id', 'yyyymm', 'class', 'datetime', 'label']
     ref['label']=ref[c_r['reason_col']].map(lambda x: translate[x])
+    #creates one column for each different unique class for all samples and put 1 to the column to which that sample belong
+    #if ref['label'] = 1, lab = [1,0,0]; if ref['label'] = 2, lab = [0,1,0] (all values of lab are in different columns)
     lab_dum=pd.get_dummies(ref['label'],prefix='lab')
+    #append the lab_x columns to the end of ref
+    #ref['person_id', 'yyyymm', 'class', 'datetime', 'label', 'lab_1', 'lab_2', 'lab_3']
     ref = pd.concat([ref, lab_dum], axis=1);
-    #This sums up the referrals.
+
+    '''This sums up the referrals.'''
+    #rearrange ref using 'person_id' and 'yyyymm' as 1st and 2nd index, and then sum
+    #basically tries -> if one patient in same month gets multiple referrals (How plausible is this??)
     ref = pd.pivot_table(ref, values=lab_dum.columns, index=[c_r['per_col'],c_r['date_col_out']], aggfunc=np.sum)
+
     #This sums the total number of referrals.
     #ref['ref_m']=ref.sum(axis=1)
 
     #This creates a binary variable for referial.
+    # ???????? Why this Binary Variable column ???????
     ref['ref']=1
 
     if drop_duplicates==True:
+        #get those columns that have 'lab_' as prefix
         cols=list(ref.columns[ref.columns.str[0:len('lab_')]=='lab_'])
+
+        #inside those cols
         for c in cols:
+            
+            #if any sample has 1 or more than 1 for (person_id, yyyymm) index, then translate it to 1 
+            #removing duplicates multiple referrals in one month for one person boils down to 1 referral
             ref[c]=ref[c].map(lambda z: 1 if z>=1 else 0)
+
     #reset the index
     ref.reset_index(inplace=True)
+
+    #ref = ['person_id', 'yyyymm', 'lab_1', 'lab_2', 'lab_3']
+    #translate = {'diabetes': 1, 'liver': 2, 'pnemonia': 3}
     return ref, translate
 
 def score_times(c_p, c_r, c_e, ref=pd.DataFrame(), pred=pd.DataFrame() ):
@@ -142,8 +170,6 @@ def add_results(results, row, y, predictions, text):
     results.loc[row, 'f1'+text]=f1_score(y, predictions)
     return results
 
-
-
 #merge needs to fill some NAs. 
 def fill_na(df, patterns, value, c_type):
     for pattern in patterns:
@@ -152,12 +178,13 @@ def fill_na(df, patterns, value, c_type):
             df[x]=df[x].fillna(value).astype(c_type)
     return df
 
-
 def generate_test_prediction_files(c_p, c_r, patients, startdate, enddate):
     """
     This takes data and backs into 
     """
-    ref=pd.read_csv(c_r['dir']+c_r['file'])
+    #ref (dataframe) = "/data/referrals/test.csv" - ['person_id', 'date', 'class'] - 23 referrals
+    # -> NO NEED: ref=pd.read_csv(c_r['dir']+c_r['file'])
+
     ref, trans = preprocess_referrals(c_r)
     cols=['ref','lab_1','lab_2','lab_3']
     pcols=['pref','plab_1','plab_2','plab_3']
