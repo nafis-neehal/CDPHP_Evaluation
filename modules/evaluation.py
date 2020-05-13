@@ -90,10 +90,14 @@ def score_times(c_p, c_r, c_e, ref=pd.DataFrame(), pred=pd.DataFrame() ):
 
     #converts 201701 to 2017-01-01 format in ref['datetime']
     ref['datetime']=pd.to_datetime(ref[c_r['date_col_out']], format= c_r['date_for_out'])
-    
+
+    #new df with person_id as index, 25 'datetime' values as columns, 'ref' of those datetime for each person as values
+    #sum_aggregate if multiple referrals for one month for one person
+    #one giant(!!) sparse matrix
     ref_w=ref.pivot_table(index=c_r['per_col'], columns='datetime', values=c_e['ref_target'], aggfunc='sum')
     ref_w=ref_w.fillna(0) #fill in NA so sums correctly. 
     
+    #if nothing is passed as pred, then load the prediction synthetic dataset, O/W load the passed one
     if pred.empty == True:
         pred_file=c_p['dir']+c_p['file']
         print("Loading predictions dataframe..", c_p['file'])
@@ -103,39 +107,61 @@ def score_times(c_p, c_r, c_e, ref=pd.DataFrame(), pred=pd.DataFrame() ):
         print("Shape of referrals dataframe:", pred.shape)
 
     #Reduce to the prediction being evaluated.
+    #converts 201701 to 2017-01-01 format in pred['datetime']
     pred['datetime']=pd.to_datetime(pred[c_p['date_col']], format= c_p['date_for'])
     
+    #select only those rows, whose datetime matches with experiment date, and keep person_id, datetime and pref columns
     pred=pred.loc[pred['datetime']==c_e['eval_date'],[c_p['per_col'],'datetime',c_e['pred_target']]]
     print("Shape of referrals dataframe:", pred.shape)
- 
-    #Initialize a results data frame.
+
+    #Initialize a results data frame. All result will be contained inside this.
     results=pd.DataFrame()
     row=0
-    #Loop through different windows. 
+
+    #Loop through different windows [[0,3], [0,6], [0,12]]
     for w in c_e['landmarks']:
+
+        #current date is set to 2017/01/01. start will be current + 0. end will be current + 3/6/12 + 00:00:00 for time
         start=c_e['eval_date']+pd.DateOffset(months=w[0])
         end=c_e['eval_date']+pd.DateOffset(months=w[1])
+
+        #converts to 201701-201704
         label=start.strftime(c_r['date_for_out'])+'-'+ end.strftime(c_r['date_for_out'])
+
         print("Splitting dataset for evaluation at", c_e['eval_date'], "Evaluating from:", label)
         sl=slice(start,end)
-        #take slice based on window
+        
+        #remove all the NaNs with 0
         ref_w=ref_w.fillna(0)
-        y= ref_w.loc[:,sl]#take slice based on window
+
+        #take slice based on window
+        #take only those columns in slice window
+        y= ref_w.loc[:,sl]
         print("Examining Columns Slice:", str(y.columns))
+
+        #take sum of total referrals in a window for each ID
         y= y.sum(axis=1)#take slice based on window
+
         #If more than 1 referral in window, recode to 1
         y[y>1]=1
+        
         #filter out people who arn't in the pred
+        #from REF, keep only those in y who are in PRED (deduct from REF)
         y=y[y.index.isin(pred[c_p['per_col']])]
-        #print("after filtering out people not in prediction", pred.shape[0], len(y))
         
         #add 0s for people who aren't in ref.
+        #append to Y, all those people for whom prediction was done, but they are not in REF y
         y=y.append(pd.Series(0,index=set(pred[c_p['per_col']])-set(y.index))).sort_index()
         #print("after adding in 0s", pred.shape[0], len(y))
         
+        #their size have to be same -- TO USE the built in metric functions
         if pred.shape[0]!=len(y):
             print("ERROR: PREDICTION AND ACTUAL DATAFRAME HAVE DIFFERENT NUMBERS.  PREDICTION:",pred.shape[0], " EVALUATION: ",len(y))
             break
+        
+        '''
+        The following portion will contain result generation using different built-in functions
+        '''
         results.loc[row, 'experiment']=c_e['experiment']
         results.loc[row, 'start_time']=pd.Timestamp.now(tz=None)
         results.loc[row, 'pred_dir']=c_p['dir']
@@ -145,18 +171,27 @@ def score_times(c_p, c_r, c_e, ref=pd.DataFrame(), pred=pd.DataFrame() ):
         results.loc[row, 'log_loss'] = log_loss(y, pred[c_e['pred_target']])
         results.loc[row, 'roc_auc_score'] = roc_auc_score(y, pred[c_e['pred_target']])
 
-        for k in c_e['k']:
+        '''
+        Probabilities predicted by each model 
+        Converted to a 1 either through the threshold or the K method (where to Top K probabilities are 1)
+        '''
+        for k in c_e['k']: #[5, 10]
             col_label='_'+c_e['ref_target']+'_@k='+str(k)
+            #top k probabilities will be 1, rest 1 be 0
             pred[col_label] = prob_to_bin(pred[c_e['pred_target']], k)
             results=add_results(results, row, y, pred[col_label], col_label)
 
-        for p in c_e['thresholds']:
+        for p in c_e['thresholds']: #[0.5, 0.6]
             col_label='_'+c_e['ref_target']+'_p>'+str(p)
+            #probabilities above threshold will be 1, O/W 0
             pred[col_label] = np.where(pred[c_e['pred_target']] > p, 1, 0)
-            results=add_results(results, row, y, pred[col_label], col_label)
+            results=add_results(results, row, y, pred[col_label], col_label) #add_results() = precision, recall, acc, balanced_acc, f1
+
         results.loc[row, 'end_time']=pd.Timestamp.now(tz=None)
         results.loc[row, 'elapsed_time']=results.loc[row, 'end_time']- results.loc[row, 'start_time']
         row=row+1
+
+    #if file needs to be saved in configuration, dump them in file
     if c_e['save']:
         results_file=c_e['dir']+c_e['file']
         if c_e['append'] and os.path.exists(results_file):
@@ -174,7 +209,6 @@ def add_results(results, row, y, predictions, text):
     results.loc[row, 'f1'+text]=f1_score(y, predictions)
     return results
 
-#merge needs to fill some NAs. 
 def fill_na(df, patterns, value, c_type):
     for pattern in patterns:
         cols=df.columns[df.columns.str.contains(pattern)]
