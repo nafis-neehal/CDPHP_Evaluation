@@ -85,8 +85,12 @@ def score_times(c_p, c_r, c_e, ref=pd.DataFrame(), pred=pd.DataFrame() ):
 
     else:
         print("Shape of referrals dataframe:", ref.shape)
+    
     #Create a wide version of the target column
+
+    #converts 201701 to 2017-01-01 format in ref['datetime']
     ref['datetime']=pd.to_datetime(ref[c_r['date_col_out']], format= c_r['date_for_out'])
+    
     ref_w=ref.pivot_table(index=c_r['per_col'], columns='datetime', values=c_e['ref_target'], aggfunc='sum')
     ref_w=ref_w.fillna(0) #fill in NA so sums correctly. 
     
@@ -182,36 +186,75 @@ def generate_test_prediction_files(c_p, c_r, patients, startdate, enddate):
     """
     This takes data and backs into 
     """
-    #ref (dataframe) = "/data/referrals/test.csv" - ['person_id', 'date', 'class'] - 23 referrals
     # -> NO NEED: ref=pd.read_csv(c_r['dir']+c_r['file'])
 
+    #ref = ['person_id', 'yyyymm', 'lab_1', 'lab_2', 'lab_3']
+    #translate = {'diabetes': 1, 'liver': 2, 'pnemonia': 3}
     ref, trans = preprocess_referrals(c_r)
-    cols=['ref','lab_1','lab_2','lab_3']
-    pcols=['pref','plab_1','plab_2','plab_3']
+
+    #column names for WHAT?
+    cols=['ref','lab_1','lab_2','lab_3'] #cols for referral - ground truth
+    pcols=['pref','plab_1','plab_2','plab_3'] #cols for predictions
+
     #Create a starter matrix with all 0
-    s1 = pd.Series(range(0,patients))
-    s2 = pd.date_range(startdate,enddate, freq='MS').strftime("%Y%m").astype(int)
+    s1 = pd.Series(range(0,patients)) #0-99 serially both index and value
+    s2 = pd.date_range(startdate,enddate, freq='MS').strftime("%Y%m").astype(int) #201601, 201602...,201801
+
+    #for each patient_id [0..99] create entry of each month [201601..201801] ~ 2500 entries 
     pred = pd.DataFrame(list(itertools.product(s1,s2)),columns=[c_p['per_col'],c_p['date_col']])
+
+    #concatenate all 4 columns from pcols to pred with all zeros
     for col in pcols:
         pred[col]=0
     
+    #new dataframe for ???
     df_dates_ref=pd.DataFrame()
+    
+    #saving a copy for ???
     ref_temp=ref.copy()
+
+    #add a new column of datetime to contain only date
     df_dates_ref['datetime']=pd.to_datetime(ref[c_r['date_col_out']], format= c_r['date_for_out'])
-    #Loop through -12 months to +12 by 6 month. 
+
+    #Loop through -12 months to +12 by 6 month - SHIFTING (Need to understand this concept)
     for x in range(-12,13,6):
+        
+        #save a copy of ref
         ref_temp=ref.copy()
+
+        #print the amount of shift
         sh="shift"+str(x)
         print(sh)
+        
+        #creates different columns for 12 months ago, 6 months ago, current, 6 months future, 12 months future
         df_dates_ref[sh]= df_dates_ref['datetime']+ pd.DateOffset(months=x)
+
+        #convert all shift columns from 2017-01-01 to 201707 format (overwrite, not append)
         df_dates_ref[sh]=df_dates_ref[sh].dt.strftime(c_r['date_for_out']).astype(int)
+
+        #overwrite ref_temp['yyyymm'] column with shifted 'yyyymm' date/month values in each loop
         ref_temp[c_r['date_col_out']]=df_dates_ref[sh]
+
+        #merging pred[person_id, yyyymm, pref, plab_1, plab_2, plab_3] and 
+        #ref_temp[person_id, yyyymm, lab_1, lab_2, lab_3, ref]
+        #All values for ref_temp is NaN now because, relavant patinet ID index [1005, 1006..3015] not found in pred
         df=pd.merge(pred, ref_temp, how='left',  on=[c_r['per_col'], c_r['date_col_out']])
+
+        #fill NaN values in 'lab_x' and 'ref' columns from ref_temp[] with 0 values (int)
         df=fill_na(df,['lab_','ref'],0, int)
+        
+        #overwrite pcols with cols
         df[pcols]=df[cols]
+        
+        #drop all the ref_temp cols
         df.drop(columns=cols, inplace=True, axis=0)
+        
+        #save the dataframe as prediction
         print("Saving dataframe.  Records:", df.shape[0], "Patients",patients)
         df.to_csv('../data/predictions/tests/tests_100_'+sh+'.csv', index=False)
+        
+        #what is this 0.75 probability? It can hurt the person_id if the person_id is 1. It can change it to 
+        #0.75 (it did)
         df[df==1]=0.75
         df.to_csv('../data/predictions/tests/tests_75_'+sh+'.csv', index=False)
         
