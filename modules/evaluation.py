@@ -111,6 +111,8 @@ def score_times(c_p, c_r, c_e, ref=pd.DataFrame(), pred=pd.DataFrame() ):
     pred['datetime']=pd.to_datetime(pred[c_p['date_col']], format= c_p['date_for'])
     
     #select only those rows, whose datetime matches with experiment date, and keep person_id, datetime and pref columns
+    #prediction on january must match with window in ground truth
+    #if january prediction is 1 and ground truth says [jan, feb, mar] contains at least one 1, then its a True Positive
     pred=pred.loc[pred['datetime']==c_e['eval_date'],[c_p['per_col'],'datetime',c_e['pred_target']]]
     print("Shape of referrals dataframe:", pred.shape)
 
@@ -136,10 +138,12 @@ def score_times(c_p, c_r, c_e, ref=pd.DataFrame(), pred=pd.DataFrame() ):
 
         #take slice based on window
         #take only those columns in slice window
+        #taking all the ground truths in window and saving it in y
         y= ref_w.loc[:,sl]
         print("Examining Columns Slice:", str(y.columns))
 
         #take sum of total referrals in a window for each ID
+        #make it a one column
         y= y.sum(axis=1)#take slice based on window
 
         #If more than 1 referral in window, recode to 1
@@ -190,7 +194,7 @@ def score_times(c_p, c_r, c_e, ref=pd.DataFrame(), pred=pd.DataFrame() ):
         results.loc[row, 'end_time']=pd.Timestamp.now(tz=None)
         results.loc[row, 'elapsed_time']=results.loc[row, 'end_time']- results.loc[row, 'start_time']
         row=row+1
-
+    
     #if file needs to be saved in configuration, dump them in file
     if c_e['save']:
         results_file=c_e['dir']+c_e['file']
