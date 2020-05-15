@@ -1,5 +1,8 @@
 # Evaluation
 
+
+[For Master Branch, not for the current branch with ongoing development]
+
 The goal of this module is to develop a consistent method of evaluating the performance of predictions for the patient panel.  
 
 I've taken a small dataset of a few referrals and non referrals, and I've generated a set of test prediction datasets that should get them all correct. They are found under:
