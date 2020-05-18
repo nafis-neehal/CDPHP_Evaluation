@@ -1,0 +1,11 @@
+Model Name:,pref
+Number of Experimental Samples: ,12
+,"pref_window_[0,3]_top_k_@5","pref_window_[0,6]_top_k_@5","pref_window_[0,12]_top_k_@5"
+precision, 0.20000, 0.20000, 0.20000
+recall, 0.33333, 0.33333, 0.20000
+accuracy, 0.33333, 0.33333, 0.20000
+balanced_accuracy, 0.44444, 0.44444, 0.31429
+f1_score, 0.25000, 0.25000, 0.20000
+log_loss, 8.63476, 8.63476,14.39122
+roc_auc_score, 0.61111, 0.61111, 0.52857
+brier_score_loss, 0.25000, 0.25000, 0.41667
