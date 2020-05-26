@@ -60,8 +60,8 @@ def score_times(c_p, c_r, c_e, ref=pd.DataFrame(), pred=pd.DataFrame() ):
     #Create a wide version of the target column
     ref['datetime']=pd.to_datetime(ref[c_r['date_col_out']], format= c_r['date_for_out'])
     ref_w=ref.pivot_table(index=c_r['per_col'], columns='datetime', values=c_e['ref_target'], aggfunc='sum')
-    ref_w=ref_w.fillna(0) #fill in NA so sums correctly. 
-    
+    ref_w=ref_w.fillna(0) #fill in NA so sums correctly.
+
     if pred.empty == True:
         pred_file=c_p['dir']+c_p['file']
         print("Loading predictions dataframe..", c_p['file'])
@@ -72,14 +72,14 @@ def score_times(c_p, c_r, c_e, ref=pd.DataFrame(), pred=pd.DataFrame() ):
 
     #Reduce to the prediction being evaluated.
     pred['datetime']=pd.to_datetime(pred[c_p['date_col']], format= c_p['date_for'])
-    
+
     pred=pred.loc[pred['datetime']==c_e['eval_date'],[c_p['per_col'],'datetime',c_e['pred_target']]]
     print("Shape of referrals dataframe:", pred.shape)
- 
+
     #Initialize a results data frame.
     results=pd.DataFrame()
     row=0
-    #Loop through different windows. 
+    #Loop through different windows.
     for w in c_e['landmarks']:
         start=c_e['eval_date']+pd.DateOffset(months=w[0])
         end=c_e['eval_date']+pd.DateOffset(months=w[1])
@@ -96,11 +96,11 @@ def score_times(c_p, c_r, c_e, ref=pd.DataFrame(), pred=pd.DataFrame() ):
         #filter out people who arn't in the pred
         y=y[y.index.isin(pred[c_p['per_col']])]
         #print("after filtering out people not in prediction", pred.shape[0], len(y))
-        
+
         #add 0s for people who aren't in ref.
         y=y.append(pd.Series(0,index=set(pred[c_p['per_col']])-set(y.index))).sort_index()
         #print("after adding in 0s", pred.shape[0], len(y))
-        
+
         if pred.shape[0]!=len(y):
             print("ERROR: PREDICTION AND ACTUAL DATAFRAME HAVE DIFFERENT NUMBERS.  PREDICTION:",pred.shape[0], " EVALUATION: ",len(y))
             break
@@ -144,7 +144,7 @@ def add_results(results, row, y, predictions, text):
 
 
 
-#merge needs to fill some NAs. 
+#merge needs to fill some NAs.
 def fill_na(df, patterns, value, c_type):
     for pattern in patterns:
         cols=df.columns[df.columns.str.contains(pattern)]
@@ -153,25 +153,26 @@ def fill_na(df, patterns, value, c_type):
     return df
 
 
-def generate_test_prediction_files(c_p, c_r, patients, startdate, enddate):
+def generate_test_prediction_files(c_p, c_r, patients_start, patients, startdate, enddate):
     """
-    This takes data and backs into 
+    This takes data and backs into
     """
     ref=pd.read_csv(c_r['dir']+c_r['file'])
     ref, trans = preprocess_referrals(c_r)
+    dropcol=['plab_1','plab_2','plab_3','yyyymm_y','lab_1','lab_2','lab_3','ref']
     cols=['ref','lab_1','lab_2','lab_3']
     pcols=['pref','plab_1','plab_2','plab_3']
     #Create a starter matrix with all 0
-    s1 = pd.Series(range(0,patients))
+    s1 = pd.Series(range(patients_start,patients_start+patients))
     s2 = pd.date_range(startdate,enddate, freq='MS').strftime("%Y%m").astype(int)
     pred = pd.DataFrame(list(itertools.product(s1,s2)),columns=[c_p['per_col'],c_p['date_col']])
     for col in pcols:
         pred[col]=0
-    
+
     df_dates_ref=pd.DataFrame()
     ref_temp=ref.copy()
     df_dates_ref['datetime']=pd.to_datetime(ref[c_r['date_col_out']], format= c_r['date_for_out'])
-    #Loop through -12 months to +12 by 6 month. 
+    #Loop through -12 months to +12 by 6 month.
     for x in range(-12,13,6):
         ref_temp=ref.copy()
         sh="shift"+str(x)
@@ -179,15 +180,15 @@ def generate_test_prediction_files(c_p, c_r, patients, startdate, enddate):
         df_dates_ref[sh]= df_dates_ref['datetime']+ pd.DateOffset(months=x)
         df_dates_ref[sh]=df_dates_ref[sh].dt.strftime(c_r['date_for_out']).astype(int)
         ref_temp[c_r['date_col_out']]=df_dates_ref[sh]
-        df=pd.merge(pred, ref_temp, how='left',  on=[c_r['per_col'], c_r['date_col_out']])
+        df=pd.merge(pred, ref_temp, how='left',  on=[c_r['per_col']])
         df=fill_na(df,['lab_','ref'],0, int)
         df[pcols]=df[cols]
-        df.drop(columns=cols, inplace=True, axis=0)
+        df.drop(columns=dropcol, inplace=True, axis=0)
         print("Saving dataframe.  Records:", df.shape[0], "Patients",patients)
         df.to_csv('../data/predictions/tests/tests_100_'+sh+'.csv', index=False)
         df[df==1]=0.75
         df.to_csv('../data/predictions/tests/tests_75_'+sh+'.csv', index=False)
-        
+
 def prob_to_bin(target, k):
     ind=np.argpartition(target, -k)[-k:]
     target_bin=np.zeros(len(target))
