@@ -25,7 +25,7 @@
   #date_format        - options: 'ym(i.e 201701)', 'y-m-d(i.e '2017-01-01')', datetime(i.e pd.datetime('2017-01-01'))
 
   c_p:
-    dir               : '../data/predictions/'
+    dir               : 'data/predictions/'
     file              : 'predictions.csv'    
     columns :
       id_column       : 'person_id'
@@ -43,13 +43,13 @@
   #day_to_evaluate    - referral can be on any day in a month. All referral dates have been converted to the first day of that month.
 
   c_r:
-    dir               : '../data/referrals/'
+    dir               : 'data/referrals/'
     file              : 'referrals.csv'
     columns           :      
       id_column       : 'person_id'
       date_column     : 'Date'
-    date_format       : 'datetime'    #options: 'ym', 'y-m-d', datetime
-    day_to_evaluate   : 1             #evaluate on day 1 of each month
+    date_format       : 'datetime'    
+    day_to_evaluate   : 1            
 
   #-----------------------------
   #Configuration for EVALUATION
@@ -72,7 +72,7 @@
   c_e:
     experiment        : 'Version 1.0'
     save_csv          : True
-    dir               : '../data/results/'
+    dir               : 'data/results/'
     file              : 'results.csv'
     eval_models       : ['lin_reg', 'rand_forest', 'xg_boost', 'sgmm']
     eval_windows      : [[-3,6], [0,3], [0,6], [0,12]]   
