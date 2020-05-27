@@ -12,11 +12,12 @@
 
   c_p:
     dir               : './data/simulated_prediction_data/'
-    file              : 'predictions2.csv'     
+    file              : 'predictions2.csv'   
+    file_format       : 'csv'  
     columns :
       id_column       : 'person_id'
-      date_column     : 'Date'
-      eval_models     : ['lin_reg', 'rand_forest', 'xg_boost', 'sgmm']
+      date_column     : 'date'
+    eval_models       : ['lin_reg', 'rand_forest', 'xg_boost', 'sgmm']
     date_format       : 'ym'   
     aws               : False
     bucket            : 'cdphp-rpi' 

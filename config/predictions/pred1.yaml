@@ -17,8 +17,8 @@
     columns :
       id_column       : 'person_id'
       date_column     : 'date'
-    eval_models     : ['lin_reg', 'rand_forest', 'xg_boost', 'sgmm']
+    eval_models       : ['lin_reg', 'rand_forest', 'xg_boost', 'sgmm']
     date_format       : 'ym'   
-    aws               : True
+    aws               : False
     bucket            : 'cdphp-rpi' 
   

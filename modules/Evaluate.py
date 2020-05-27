@@ -25,8 +25,8 @@ def evaluate(c_p, c_r, c_e):
         Helper.convert_dates_ref(referral, c_r)
     
     #now both prediction['Date'] and referral['Date'] is in Datetime format instead of previous String format
-    print(c_p)
-    prediction = Helper.read_file(c_p['dir'], c_p['file'], c_p['file_format'], c_p['aws'] )
+    prediction = Helper.read_file(c_p['dir'], c_p['file'], c_p['file_format'], c_p['aws'])
+
      
     #change date from ym to ymd here
     if c_p['date_format']=='ym':

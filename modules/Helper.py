@@ -3,6 +3,7 @@ from datetime import datetime
 import random 
 import pandas as pd 
 import yaml
+from IPython.core.display import display
 
 #for generation
 #generate random date between a range
@@ -119,10 +120,10 @@ def load_configuration(config_file, predictions_files):
 
     return c_r, c_e, c_gen, c_aws, c_visual, c_p
 
-def read_file(directory, file, format='csv', s3=False, bucket=None):
+def read_file(directory, file, format, s3, bucket=None):
     #need to handle 4 cases of local/s3/csv/parquet
     if format=='csv' and s3==False:
-        file = pd.read_csv(c_p['dir'] + c_p['file'])
+        df = pd.read_csv(directory + file)
     #if format=='parquet' and s3==False:
     #    file = pd.read_csv(c_p['dir'] + c_p['file']
-    return file
+    return df

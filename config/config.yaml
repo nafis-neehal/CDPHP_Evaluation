@@ -101,11 +101,11 @@
   
   
   #--------------------------------------------------------------------------------------------------
-  #This portion is only for generation of synthetic data. You don't need to bother about this at all.
+  #AWS Access Keys
   #--------------------------------------------------------------------------------------------------
   c_aws:
-    key: AKIA2W36TZO4GGFOD2GS
-    secret: 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
+    key               : None 
+    secret            : None 
  
   
   #--------------------------------------------------------------------------------------------------
@@ -115,7 +115,7 @@
     dir               : './data/simulated_prediction_data/'
 
     pred:
-      file            : 'referrals.csv'
+      file            : 'predictions.csv'
       columns :
           id_column       : 'person_id'
           date_column     : 'date'
@@ -126,7 +126,7 @@
       end_date        : '2018-01-01'  #prediction ends on December 2017
       date_format    : 'ym'
     ref:
-      file            : 'predictions.csv'
+      file            : 'referrals.csv'
       columns :
           id_column       : 'person_id'
           date_column     : 'date'
