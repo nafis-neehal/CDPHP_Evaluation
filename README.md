@@ -9,6 +9,7 @@ Use:
 2. Change the `path/to/dir` of config.yaml in the Evaluation.ipynb if it is anything different from `./config/config.yaml`.
 3. Comment/Uncomment the two functions for generating synthetic data inside the main function in Evaluation.ipynb based on your need. 
 4. Run and see all the evaluations you wanted. 
+5. You can run multiple experiments (run the whole program multiple times) and all the results will be appended. You have the option to change this in config.yaml
 
 Directory Structure:
  - Prediction File resides in `./data/predictions/predictions.csv`
