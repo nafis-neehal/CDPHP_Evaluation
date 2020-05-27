@@ -1,39 +1,5 @@
 ---
-  #--------------------------------------------------------------------------------------------------
-  #This portion is only for generation of synthetic data. You don't need to bother about this at all.
-  #--------------------------------------------------------------------------------------------------
-  c_gen:
-    pred:
-      model_columns   : ['lin_reg', 'rand_forest', 'xg_boost', 'sgmm'] #generating different model columns
-      num_samples     : 500           #don't bother about this, this is just used while generating synthetic data
-      start_date      : '2016-01-01'  #prediction starts from January 2016
-      end_date        : '2018-01-01'  #prediction ends on December 2017
-    ref:
-      num_samples     : 25            #don't bother about this, this is just used while generating synthetic data
-      upper_bound     : 1000          #upper bound for random range of synthetic referral data ID samples
-      start_date      : '2016-01-01'  #referral starts from January 2016
-      end_date        : '2018-01-01'  #referral ends on December 2017
-  
-  #-------------------------------------
-  #Configuration for the PREDICTION file
-  #-------------------------------------
-  #bucket             - bucket name in S3 (you can use different buckets for prediction/referral/result if you want to)
-  #dir                - give the directory or the pre_key where the prediction file will be pulled from ('pre-key' in S3)
-  #file               - give the file name or the key where the prediction file will be pulled from ('key' in S3)
-  #columns            - type a identifier for the column name (i.e. id_column) and then the name of the actual column name in file 
-  #                     (i.e. 'person_id'). One row for each column. Don't put columns for different MODEL NAMES here. Put them in 
-  #                     c_e['eval_models'] row in c_e section instead.
-  #date_format        - options: 'ym(i.e 201701)', 'y-m-d(i.e '2017-01-01')', datetime(i.e pd.datetime('2017-01-01'))
 
-  c_p:
-    bucket            : 'cdphp-rpi'
-    dir               : './data/predictions/'
-    file              : 'predictions.csv'    
-    columns :
-      id_column       : 'person_id'
-      date_column     : 'Date'
-    date_format       : 'ym'          
-  
   #------------------------------------
   #Configuration for the REFERRAL file
   #------------------------------------
@@ -48,11 +14,11 @@
 
   c_r:
     bucket            : 'cdphp-rpi'
-    dir               : './data/referrals/'
+    dir               : './data/simulated_prediction_data/'
     file              : 'referrals.csv'
     columns           :      
       id_column       : 'person_id'
-      date_column     : 'Date'
+      date_column     : 'date'
     date_format       : 'datetime'    
     day_to_evaluate   : 1            
 
@@ -81,7 +47,6 @@
     save_csv          : True
     dir               : './results/'
     file              : 'results.csv'
-    eval_models       : ['lin_reg', 'rand_forest', 'xg_boost', 'sgmm']
     eval_windows      : [[-3,6], [0,3], [0,6], [0,12]]   
     eval_date         : '2017-01-01'
     eval_method       : 'top_k'      
@@ -133,5 +98,41 @@
     probability_distribution: 
       plot            : True
       models          : ['lin_reg', 'rand_forest', 'xg_boost', 'sgmm']
-            
-            
+  
+  
+  #--------------------------------------------------------------------------------------------------
+  #This portion is only for generation of synthetic data. You don't need to bother about this at all.
+  #--------------------------------------------------------------------------------------------------
+  c_aws:
+    key: AKIA2W36TZO4GGFOD2GS
+    secret: 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
+ 
+  
+  #--------------------------------------------------------------------------------------------------
+  #This portion is only for generation of synthetic data. You don't need to bother about this at all.
+  #--------------------------------------------------------------------------------------------------
+  c_gen:
+    dir               : './data/simulated_prediction_data/'
+
+    pred:
+      file            : 'referrals.csv'
+      columns :
+          id_column       : 'person_id'
+          date_column     : 'date'
+
+      model_columns   : ['lin_reg', 'rand_forest', 'xg_boost', 'sgmm'] #generating different model columns
+      num_samples     : 500           #don't bother about this, this is just used while generating synthetic data
+      start_date      : '2016-01-01'  #prediction starts from January 2016
+      end_date        : '2018-01-01'  #prediction ends on December 2017
+      date_format    : 'ym'
+    ref:
+      file            : 'predictions.csv'
+      columns :
+          id_column       : 'person_id'
+          date_column     : 'date'
+      num_samples     : 25            #don't bother about this, this is just used while generating synthetic data
+      upper_bound     : 1000          #upper bound for random range of synthetic referral data ID samples
+      start_date      : '2016-01-01'  #referral starts from January 2016
+      end_date        : '2018-01-01'  #referral ends on December 2017
+      date_format     : 'datetime'
+  

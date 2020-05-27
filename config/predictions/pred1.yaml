@@ -1,0 +1,24 @@
+---
+  #-------------------------------------
+  #Configuration for the PREDICTION file
+  #-------------------------------------
+  #bucket             - bucket name in S3 (you can use different buckets for prediction/referral/result if you want to)
+  #dir                - give the directory or the pre_key where the prediction file will be pulled from ('pre-key' in S3)
+  #file               - give the file name or the key where the prediction file will be pulled from ('key' in S3)
+  #columns            - type a identifier for the column name (i.e. id_column) and then the name of the actual column name in file 
+  #                     (i.e. 'person_id'). One row for each column. Don't put columns for different MODEL NAMES here. Put them in 
+  #                     c_e['eval_models'] row in c_e section instead.
+  #date_format        - options: 'ym(i.e 201701)', 'y-m-d(i.e '2017-01-01')', datetime(i.e pd.datetime('2017-01-01'))
+
+  c_p:
+    dir               : './data/simulated_prediction_data/'
+    file              : 'predictions.csv'
+    file_format       : 'csv'
+    columns :
+      id_column       : 'person_id'
+      date_column     : 'date'
+    eval_models     : ['lin_reg', 'rand_forest', 'xg_boost', 'sgmm']
+    date_format       : 'ym'   
+    aws               : True
+    bucket            : 'cdphp-rpi' 
+  
