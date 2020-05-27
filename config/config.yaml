@@ -61,6 +61,7 @@
   #-----------------------------
   #experiment         - name of the experiment / version / anything
   #save_csv           - if you want to save the csv file in the specified dir + file.
+  #append_csv         - if you want to append all your experiment data into one file. O/w result file will be overwritten every time.
   #dir                - give the directory or the pre_key where result will be saved
   #file               - give the file name or the key where result will be saved
   #eval_models        - name(s) of the models you want to use (all/selected) in your evaluation from all the models in prediction file.
@@ -79,6 +80,7 @@
   c_e:
     experiment        : 'Version 1.0'
     save_csv          : True
+    append_csv        : True 
     dir               : './results/'
     file              : 'results.csv'
     eval_models       : ['lin_reg', 'rand_forest', 'xg_boost', 'sgmm']

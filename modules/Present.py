@@ -37,7 +37,7 @@ def present_evaluation(c_p, c_r, c_e, c_visual, all_model_evaluations, table=Fal
         generate_probability_distribution_plot(c_p, c_visual['probability_distribution']['models'])
     
     if c_e['save_csv'] == True:
-            if os.path.exists(result_file):
+            if os.path.exists(result_file) and c_e['append_csv']==True:
                 data.to_csv(result_file, index = False, float_format= '%8.5f', mode='a')
             else:
                 data.to_csv(result_file, index = False, float_format= '%8.5f', mode='w')
