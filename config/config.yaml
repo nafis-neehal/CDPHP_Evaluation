@@ -1,0 +1,137 @@
+---
+  #--------------------------------------------------------------------------------------------------
+  #This portion is only for generation of synthetic data. You don't need to bother about this at all.
+  #--------------------------------------------------------------------------------------------------
+  c_gen:
+    pred:
+      model_columns   : ['lin_reg', 'rand_forest', 'xg_boost', 'sgmm'] #generating different model columns
+      num_samples     : 500           #don't bother about this, this is just used while generating synthetic data
+      start_date      : '2016-01-01'  #prediction starts from January 2016
+      end_date        : '2018-01-01'  #prediction ends on December 2017
+    ref:
+      num_samples     : 25            #don't bother about this, this is just used while generating synthetic data
+      upper_bound     : 1000          #upper bound for random range of synthetic referral data ID samples
+      start_date      : '2016-01-01'  #referral starts from January 2016
+      end_date        : '2018-01-01'  #referral ends on December 2017
+  
+  #-------------------------------------
+  #Configuration for the PREDICTION file
+  #-------------------------------------
+  #bucket             - bucket name in S3 (you can use different buckets for prediction/referral/result if you want to)
+  #dir                - give the directory or the pre_key where the prediction file will be pulled from ('pre-key' in S3)
+  #file               - give the file name or the key where the prediction file will be pulled from ('key' in S3)
+  #columns            - type a identifier for the column name (i.e. id_column) and then the name of the actual column name in file 
+  #                     (i.e. 'person_id'). One row for each column. Don't put columns for different MODEL NAMES here. Put them in 
+  #                     c_e['eval_models'] row in c_e section instead.
+  #date_format        - options: 'ym(i.e 201701)', 'y-m-d(i.e '2017-01-01')', datetime(i.e pd.datetime('2017-01-01'))
+
+  c_p:
+    bucket            : 'cdphp-rpi'
+    dir               : './data/predictions/'
+    file              : 'predictions.csv'    
+    columns :
+      id_column       : 'person_id'
+      date_column     : 'Date'
+    date_format       : 'ym'          
+  
+  #------------------------------------
+  #Configuration for the REFERRAL file
+  #------------------------------------
+  #NOTE               - Referral file has two columns - person_id,
+  #bucket             - bucket name in S3 (you can use different buckets for prediction/referral/result if you want to)
+  #dir                - give the directory or the pre_key where the referral file will be pulled from ('pre-key' in S3)
+  #file               - give the file name or the key where the referral file will be pulled from ('key' in S3)
+  #columns            - type a identifier for the column name (i.e. id_column) and then the name of the actual column name in file 
+  #                     (i.e. 'person_id'). One row for each column. 
+  #date_format        - options: 'ym(i.e 201701)', 'y-m-d(i.e '2017-01-01')', datetime(i.e pd.datetime('2017-01-01'))
+  #day_to_evaluate    - referral can be on any day in a month. All referral dates have been converted to the first day of that month.
+
+  c_r:
+    bucket            : 'cdphp-rpi'
+    dir               : './data/referrals/'
+    file              : 'referrals.csv'
+    columns           :      
+      id_column       : 'person_id'
+      date_column     : 'Date'
+    date_format       : 'datetime'    
+    day_to_evaluate   : 1            
+
+  #-----------------------------
+  #Configuration for EVALUATION
+  #-----------------------------
+  #experiment         - name of the experiment / version / anything
+  #save_csv           - if you want to save the csv file in the specified dir + file.
+  #dir                - give the directory or the pre_key where result will be saved
+  #file               - give the file name or the key where result will be saved
+  #eval_models        - name(s) of the models you want to use (all/selected) in your evaluation from all the models in prediction file.
+  #eval_windows       - list of the windows you want to evaluate. Can be a negative window. [-2,2] for Jan 2017 = [Nov, Dec, Jan, Feb, March].
+  #eval_date          - date you want to evaluate on. Has to be the first day of the month. Can be any month-year. (Format: YYYY-MM-DD)
+  #eval_method        - either 'top_k' or 'thresholding'. Mutually exclusive. You can't choose both. O/W adds unnecessary complexity.
+  #thresholding       - values you want to check thresholding method for. Has to be a list. Can be single/multiple values at a time.
+  #top_k              - values you want to check top_k method for. Has to be a list. Can be single/multiple values at a time.
+  #recent_ref_window  - number of previous months you want to drop referral for. If 3, on Jan 2017, then Oct, Nov, Dec 2016 will be dropped.
+  #drop_ref           - if you want to use drop_recent_referral. Otherwise, set it to False.
+  #drop_neg_prob      - if you want to drop negative probabilities from prediction. Otherwise, set it to False.
+  #aws                - keep True if you want to upload/download data from AWS besides the local folder
+  #bucket             - S3 bucket (you can use different buckets for prediction/referral/result if you want to)
+  #NOTE: drop_ref, drop_neg_prob and negative window usage are NOT mutually exclusive. You can use all/combination/none of them if you want.
+
+  c_e:
+    experiment        : 'Version 1.0'
+    save_csv          : True
+    dir               : './results/'
+    file              : 'results.csv'
+    eval_models       : ['lin_reg', 'rand_forest', 'xg_boost', 'sgmm']
+    eval_windows      : [[-3,6], [0,3], [0,6], [0,12]]   
+    eval_date         : '2017-01-01'
+    eval_method       : 'top_k'      
+    thresholding      : [0.5, 0.6]
+    top_k             : [50,60]
+    recent_ref_window : 6
+    drop_ref          : True 
+    drop_neg_prob     : True
+    aws               : False
+    bucket            : 'cdphp-rpi' 
+
+#-------------------------------
+#Configuration for VISUALIZATION
+#-------------------------------
+#TABLE DATAFRAME DISPLAY
+#show                 :if you want to see the results in a tabular format/dataframe. The result can be seen from the saved CSV file too.
+#metrics              :list of the metrics you want to see in the table for all model for all evaluation window. Must be a LIST.
+
+#MODEL COMPARISON PLOT
+#plot                 :if you want to see plots (sns.catplot/bar) of comparisons between models. Will be shown for ALL top_k/threshold values.
+#metrics              :list of the metrics you want to see in the plot for all model. Must be a LIST. Can choose single/multiple metrics.
+#window               :list of the evaluation windows you want to see your plots for. Must be a LIST. Can choose single/multiple windows.
+
+#CONFUSION MATRIX PLOT
+#plot                 :if you want to see plots (sns.heatmap) of confusion matrix. 
+#model                :name of the model you want to see the confusion matrix for. Only ONE model at a time.
+#window               :window you want to see the confusion matrix for. Only ONE window at a time.
+#thres                :top_k / thresholding value depending on the evaluation method used in c_e. Only ONE value at a time.
+
+#PROBABILITY DISTRIBUTIONS OF MODELS PLOT
+#plot                 :if you want to see plots (sns.distplot) of probability distributions of each model. 
+#models               :list of models you want to see distribution for. Can choose single/multiple models.
+
+  c_visual:
+    table : 
+      show            :  True
+      metrics         : ['confusion_matrix','precision', 'recall', 'accuracy', 'balanced_acc', 'f1_score', 'log_loss', 
+                          'roc_auc_score', 'brier_score_loss']
+    model_comparison:
+      plot            : True
+      metrics         : ['precision','recall', 'accuracy', 'balanced_acc', 'f1_score', 'log_loss', 'roc_auc_score', 
+                          'brier_score_loss']
+      windows         : [[0,3], [0,6]]
+    confusion_matrix: 
+      plot            : True
+      model           : 'lin_reg'
+      window          : [0,3]
+      thres           : 50
+    probability_distribution: 
+      plot            : True
+      models          : ['lin_reg', 'rand_forest', 'xg_boost', 'sgmm']
+            
+            

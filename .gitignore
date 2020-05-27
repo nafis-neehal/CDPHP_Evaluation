@@ -15,6 +15,9 @@ build
 
 /data/predictions/tests/*
 
+# For notes only
+*.pptx
+*.pdf
 
 # IDEs and editors
 *.swp
