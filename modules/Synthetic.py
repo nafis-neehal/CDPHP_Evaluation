@@ -1,4 +1,5 @@
 import Helper
+import Aws
 import pandas as pd
 import numpy as np
 import itertools as it
@@ -6,7 +7,7 @@ import itertools as it
 #for generaiton
 #mutable obj integrity checked
 #no changes in c_p, c_r
-def generate_synthetic_ground_truth_data(c_gen, c_r):
+def generate_synthetic_ground_truth_data(c_gen, c_r, c_e):
     seed = 1234
     np.random.seed(seed)
     patients = pd.Series([x for x in np.random.randint(0, c_gen['ref']['upper_bound'], c_gen['ref']['num_samples'])])
@@ -14,11 +15,13 @@ def generate_synthetic_ground_truth_data(c_gen, c_r):
     date = pd.Series([d for d in Helper.generate_random_date(c_gen['ref']['start_date'], c_gen['ref']['end_date'], c_gen['ref']['num_samples'], c_r['date_format'])])
     data = pd.DataFrame({c_r['columns']['id_column']:patients, c_r['columns']['date_column']:date})
     data.to_csv(c_r['dir']+c_r['file'], index = False, float_format= '%8.5f', mode='w')
+    if c_e['aws'] == True:
+                Aws.upload_to_aws(c_r['dir']+c_r['file'], c_r['bucket'], c_r['dir']+c_r['file'])
 
 #for generation
 #mutable obj integrity checked
 #no changes in c_p
-def generate_synthetic_prediction_data(c_gen, c_p):
+def generate_synthetic_prediction_data(c_gen, c_p, c_e):
     patients = pd.Series(range(0, c_gen['pred']['num_samples'])) #500
     
     if c_p['date_format']=='ym':
@@ -37,3 +40,5 @@ def generate_synthetic_prediction_data(c_gen, c_p):
     
     #dataframe_to_csv(data, c_p['dir']+c_p['file'])
     data.to_csv(c_p['dir']+c_p['file'], index=False, float_format= '%8.5f', mode='w')
+    if c_e['aws'] == True:
+                Aws.upload_to_aws(c_p['dir']+c_p['file'], c_p['bucket'], c_p['dir']+c_p['file'])

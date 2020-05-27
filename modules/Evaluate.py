@@ -1,7 +1,9 @@
 import Helper
 import Score
+import Aws
 import pandas as pd
 import numpy as np
+from IPython.core.display import display
 
 #cp, c_r, c_e are all mutable
 #mutable obj integrity checked
@@ -9,8 +11,12 @@ def evaluate(c_p, c_r, c_e):
     
     eval_method = c_e['eval_method']      
     
+    if(c_e['aws']==True):
+        Aws.download_from_aws(c_r['bucket'], c_r['dir']+c_r['file'], c_r['dir']+c_r['file'])
+        Aws.download_from_aws(c_p['bucket'], c_p['dir']+c_p['file'], c_p['dir']+c_p['file']) 
+
     referral = pd.read_csv(c_r['dir'] + c_r['file'])
-    ref_copy = referral.copy() #shallow copy
+    ref_copy = referral[list(c_r['columns'].values())].copy() #shallow copy
     
     #convert_dates_ref(c_r)
     if c_r['date_format']=='ym':
@@ -22,7 +28,7 @@ def evaluate(c_p, c_r, c_e):
     #now both pred_copy['Date'] and ref_copy['Date'] is in Datetime format instead of previous String format
     
     prediction = pd.read_csv(c_p['dir'] + c_p['file'])
-    pred_copy = prediction.copy()
+    pred_copy = prediction[list(c_p['columns'].values()) + c_e['eval_models']].copy()
         
     #change date from ym to ymd here
     if c_p['date_format']=='ym':
@@ -32,7 +38,7 @@ def evaluate(c_p, c_r, c_e):
         
     #now both ref_copy and pred_copy are datetime
     ##only applying top_k in selected range, not the whole column-------------------->>>>>>>
-    pred_copy = pred_copy.loc[pred_copy[c_p['columns']['date_column']]==c_e['eval_date']] 
+    pred_copy = pred_copy.loc[pred_copy[c_p['columns']['date_column']]==c_e['eval_date']]
     
     all_model_list = c_e['eval_models']
     

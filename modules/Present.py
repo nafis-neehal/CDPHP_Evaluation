@@ -3,7 +3,7 @@ from IPython.core.display import display
 import os 
 import seaborn as sns
 import matplotlib.pyplot as plt
-import Helper 
+import Helper, Aws 
 
 
 #generate plottable dataframe from whole result: evaluation_to_dataframe() helper function
@@ -17,8 +17,6 @@ def present_evaluation(c_p, c_r, c_e, c_visual, all_model_evaluations, table=Fal
     
     #clear if there is already any result file previously (from previous run/experiment), 
     #otherwise it will just keep appending, as opening in append mode
-    if os.path.exists(result_file):
-        os.remove(result_file)
         
     data = generate_tabular_data(c_p, c_r, c_e, c_visual, all_model_evaluations)
     
@@ -39,7 +37,12 @@ def present_evaluation(c_p, c_r, c_e, c_visual, all_model_evaluations, table=Fal
         generate_probability_distribution_plot(c_p, c_visual['probability_distribution']['models'])
     
     if c_e['save_csv'] == True:
-        data.to_csv(result_file, index = False, float_format= '%8.5f', mode='w')
+            if os.path.exists(result_file):
+                data.to_csv(result_file, index = False, float_format= '%8.5f', mode='a')
+            else:
+                data.to_csv(result_file, index = False, float_format= '%8.5f', mode='w')
+            if c_e['aws'] == True:
+                Aws.upload_to_aws(result_file, c_e['bucket'], result_file)
     
 #name of models, windows, top_ks
 def generate_confusion_matrix_plot(c_e, all_model_evaluations, model, window, thres):
