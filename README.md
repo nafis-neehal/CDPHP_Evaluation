@@ -4,18 +4,15 @@
 
 The goal of this module is to develop a consistent method of evaluating the performance of predictions for the patient panel.  
 
-I've taken a small dataset of a few referrals and non referrals, and I've generated a set of test prediction datasets that should get them all correct. They are found under:
+Use:
+1. First make all the necessary tweaks in `config/config.yaml`. You will have all the parameters you want to tweak for the evaluation. Everything is documented.
+2. Change the `path/to/dir` of config.yaml in the Evaluation.ipynb if it is anything different from `./config/config.yaml`.
+3. Comment/Uncomment the two functions for generating synthetic data inside the main function in Evaluation.ipynb based on your need. 
+4. Run and see all the evaluations you wanted. 
 
-For example, the file: 
+Directory Structure:
+ - Prediction File resides in `./data/predictions/predictions.csv`
+ - Referral File resides in `./data/referrals/referrals.csv`
+ - Result will be saved in `./results/results.csv`
 
-`/data/predictions/tests/tests_100_shift-12.csv`
-
-Should have all the correct predictions (at probability 1.00) just shifted ahead by 12 months. 
-
-`/data/predictions/tests/tests_100_shift0.csv` is a 100% correct in the correct month. 
-
-The other set of files: 
-`/data/predictions/tests/tests_75_shift0.csv`
-
-Are identical except they have .75 as max prediction rather than 1.00.
-
+I've followed the same directory structure for local machine and for S3. If any changes made to the directory structure, the config.yaml file should be changed accordingly.
