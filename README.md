@@ -17,3 +17,11 @@ Directory Structure:
  - Result will be saved in `./results/results.csv`
 
 I've followed the same directory structure for local machine and for S3. If any changes made to the directory structure, the config.yaml file should be changed accordingly.
+
+```
+#Load Configuration
+c_r, c_e, c_gen, c_aws, c_visual, predictions=Helper.load_configuration(config_file, prediction_files)
+#Load Referrals
+referrals=Helper.read_file(directory=c_r['dir'],file=c_r['file'],file_format=c_r['file_format'],s3=True,bucket= c_r['bucket'])
+referrals
+```
