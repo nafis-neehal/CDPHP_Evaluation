@@ -1,7 +1,7 @@
 import datetime as dt
 from datetime import datetime
-import random 
-import pandas as pd 
+import random
+import pandas as pd
 import yaml
 from IPython.core.display import display
 import Helper
@@ -30,7 +30,7 @@ def generate_random_date(start_date, end_date, iteration, date_format):
             random_date = int(random_date.strftime("%Y%m"))
         date_list.append(random_date)
         seed += 1
-    
+
     return date_list
 
 #for evaluation
@@ -76,14 +76,14 @@ def ym_to_datetime(config, df): #ym to datetime
         df[label][i] = df[label][i][:4] + '-' + df[label][i][4:] + '-01' #choosing the first month of the day
     df[label] = pd.to_datetime(df[label])
     #return df
-    
+
 
 #for evaluation
 def drop_recent_referrals(c_p, c_r, c_e, ref_copy, pred_copy):
     start = c_e['eval_date'] - pd.DateOffset(months=c_e['recent_ref_window'])
     end = c_e['eval_date'] - pd.DateOffset(months=1) #ends the previous month of the current month
     mask = (ref_copy[c_r['columns']['date_column']]>=start) & (ref_copy[c_r['columns']['date_column']]<=end)
-    
+
     #those IDs from prediction (0-500) that are not in list of those IDs that fall in daterange of all IDs(0-1000)
     idx = ~pred_copy[c_p['columns']['id_column']].isin(ref_copy.loc[mask][c_r['columns']['id_column']])
     pred_copy = pred_copy[idx]
@@ -91,21 +91,21 @@ def drop_recent_referrals(c_p, c_r, c_e, ref_copy, pred_copy):
 
 #[0,3] -> datetime range in string
 def window_to_range(c_e, window):
-    
+
     if(window[0]<0):
         start = c_e['eval_date'] - pd.DateOffset(months=(-1)*window[0])
     else:
         start = c_e['eval_date'] + pd.DateOffset(months=window[0])
 
     end = c_e['eval_date'] + pd.DateOffset(months=window[1])
-    
+
     start = start.strftime('%Y/%m')
     end = end.strftime('%Y/%m')
-    
+
     win_range = start + '-' + end
     return win_range
 
-def load_yaml(file):    
+def load_yaml(file):
     with open(file) as f:
         return yaml.safe_load(f)
 
@@ -133,10 +133,10 @@ def read_file(directory, file, format, s3, bucket=None, temp_dir='../data/tmp/',
             directory=temp_dir
         if format == 'csv':
             df = pd.read_csv(directory+file)
-        
+
         elif format=='pickle':
-            df = pickle.loads(directory+file)        
-        
+            df = pickle.loads(directory+file)
+
         filter=ds.field('c') == 2
     elif format == 'parquet':
         if s3:
