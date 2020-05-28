@@ -12,7 +12,7 @@ import Helper, Aws
 #mutable obj integrity checked
 def present_evaluation(c_p, c_r, c_e, c_visual, all_model_evaluations, table=False, plot = False, save=False):
     
-    #result file
+    #result fileca
     result_file = c_e['dir'] + c_e['file']
     
     #clear if there is already any result file previously (from previous run/experiment), 
@@ -93,11 +93,11 @@ def generate_comparison_plot(c_e, data, plot_window, metrics):
             #pivot the data to covert wide dataframe to long dataframe
             pf_new = pd.melt(pf, id_vars=['Model'], value_vars=final_modified_columns[1:])
 
-            data_plot = sns.catplot(x="variable", y="value", hue="Model", data=pf_new, kind="bar", height = 4, aspect = 3)
-            data_plot.set_xlabels("Metrics")
-            data_plot.set_ylabels("Score")
-            title = "Performance of Models During " + win + " with " + c_e['eval_method'] + "_@" + str(t)
-            data_plot.fig.suptitle(title)
+            #data_plot = sns.catplot(x="variable", y="value", hue="Model", data=pf_new, kind="bar", height = 4, aspect = 3)
+            #data_plot.set_xlabels("Metrics")
+            #data_plot.set_ylabels("Score")
+            #title = "Performance of Models During " + win + " with " + c_e['eval_method'] + "_@" + str(t)
+            #data_plot.fig.suptitle(title)
 
 #takes all info, returns dataframe 
 def generate_tabular_data(c_p, c_r, c_e, c_visual, all_model_evaluations):
