@@ -72,8 +72,8 @@ datetime.strftime(datetime) -> string in different formats
 #updated mutable dataframe passed by reference
 def ym_to_datetime(config, df): #ym to datetime
     label = config['columns']['date_column']
-    df[label] = df[label].astype(str)
-    df[label]=pd.to_datetime(df['date'], format='%Y%m')
+    df[label]=df[label].astype(str)
+    df[label]=pd.to_datetime(df[label],format='%Y%m')
     #for i in range(df[label].size):
     #    df[label][i] = df[label][i][:4] + '-' + df[label][i][4:] + '-01' #choosing the first month of the day
     #df[label] = pd.to_datetime(df[label])
@@ -129,17 +129,10 @@ def load_configuration(config_file, predictions_files):
 
 def read_file(directory, file, file_format, aws=False, bucket=None, temp_dir='../data/tmp/', filters=None):
     #need to handle 4 cases of local/s3/csv/parquet
-
+         
     if file_format in ['csv', 'pickle']:
-        if aws:
-            Aws.download_from_aws(bucket, directory+file, temp_dir+file)
-            directory=temp_dir
-        if file_format == 'csv':
-            print("Reading file", directory+file)
-            df = pd.read_csv(directory+file)
-
-        elif file_format=='pickle':
-            df = pickle.loads(directory+file)
+        df= Aws.load_from_aws(bucket=bucket, directory=directory, file=file)
+        
         return df
 
     elif file_format == 'parquet':
