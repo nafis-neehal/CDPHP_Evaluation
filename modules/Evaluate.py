@@ -7,22 +7,16 @@ from IPython.core.display import display
 
 #cp, c_r, c_e are all mutable
 #mutable obj integrity checked
-def evaluate(c_p, c_e, c_r, referral ):
+def evaluate(c_p, c_e, c_r, referral, prediction ):
     
     eval_method = c_e['eval_method']      
-    
-    if(c_p['aws']==True):
-        Aws.download_from_aws(c_p['bucket'], c_p['dir']+c_p['file'], c_p['dir']+c_p['file']) 
        
     #convert_dates_ref(c_r)
     if c_r['date_format']=='ym':
-        Helper.ym_to_datetime(c_r, referral) #passing reference of mutable referral, will be directly edited
+        df = Helper.ym_to_datetime(c_r, referral) #passing reference of mutable referral, will be directly edited
     else:
         referral[c_r['columns']['date_column']] = pd.to_datetime(referral[c_r['columns']['date_column']])
         Helper.convert_dates_ref(referral, c_r)
-    
-    #now both prediction['Date'] and referral['Date'] is in Datetime format instead of previous String format
-    prediction = Helper.read_file(c_p['dir'], c_p['file'], c_p['file_format'], c_p['aws'])
 
      
     #change date from ym to ymd here
@@ -33,26 +27,29 @@ def evaluate(c_p, c_e, c_r, referral ):
         
     #now both referral and prediction are datetime
     ##only applying top_k in selected range, not the whole column-------------------->>>>>>>
+    print("start processing prediction ")
     prediction = prediction.loc[prediction[c_p['columns']['date_column']]==c_e['eval_date']]
     
     all_model_list = c_p['eval_models']
     
     #if all models predicts -1, then I can safely drop patient-month-date row with -1 predictions here
     #select rows, where the first model is not -1 (all model predicts -1)
+        
+    print("start drop neg ")
     if c_e['drop_neg_prob'] == True:
         prediction = prediction[prediction[all_model_list[0]]!=-1]
-    
+    print("start drop recent ")
     #remove recent referrals checking back k months in referral and drop them from prediction
     if c_e['drop_ref'] == True:
         prediction = Helper.drop_recent_referrals(c_p, c_r, c_e, referral, prediction)
-    
+    print("end drop recent ")
     #pivot referral table
     referral['target'] = pd.Series(np.ones(referral.shape[0], dtype=float))
     referral = referral.pivot_table(index=c_r['columns']['id_column'], columns=c_r['columns']['date_column'], values='target', aggfunc='sum')
     referral = referral.fillna(0)
     
     all_model_evaluations = {} #{'model_name':score class object for that model}
-        
+    print("starting to loop through models ")    
     #now branch out for each model
     for model in all_model_list:
         
@@ -141,6 +138,9 @@ def update_model_score(model, evaluated_model_obj, label, y_true, prediction):
     
     brier_score_loss = evaluated_model_obj.get_brier_score_loss(y_true.values, prediction[model].values)
     evaluated_model_obj.brier_score_loss.update({label:brier_score_loss})
+    
+    #add number of samples used by this model
+    evaluated_model_obj.experimental_samples = y_true.shape[0]
     
     #add number of samples used by this model
     evaluated_model_obj.experimental_samples = y_true.shape[0]
