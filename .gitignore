@@ -8,6 +8,7 @@ build
 */.ipynb_checkpoints/*
 .ipynb_checkpoints/*
 *checkpoints*/*
+*checkpoint*/*
 /tests/tmp/*
 /data/classification/*
 /data/regression/*
@@ -31,3 +32,6 @@ build
 .directory
 .pytest_cache/v/cache/*
 *.zip
+*.checkpoint
+config/predictions/.ipynb_checkpoints/pred1-checkpoint.yaml
+config/predictions/.ipynb_checkpoints/pred2-checkpoint.yaml

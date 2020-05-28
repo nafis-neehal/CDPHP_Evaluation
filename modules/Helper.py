@@ -131,8 +131,10 @@ def read_file(directory, file, file_format, aws=False, bucket=None, temp_dir='..
     #need to handle 4 cases of local/s3/csv/parquet
          
     if file_format in ['csv', 'pickle']:
-        df= Aws.load_from_aws(bucket=bucket, directory=directory, file=file)
-        
+        if aws:
+            df= Aws.load_from_aws(bucket=bucket, directory=directory, file=file)
+        else:
+            df= pd.read_csv(directory+file)
         return df
 
     elif file_format == 'parquet':

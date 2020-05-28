@@ -27,29 +27,25 @@ def evaluate(c_p, c_e, c_r, referral, prediction ):
         
     #now both referral and prediction are datetime
     ##only applying top_k in selected range, not the whole column-------------------->>>>>>>
-    print("start processing prediction ")
-    prediction = prediction.loc[prediction[c_p['columns']['date_column']]==c_e['eval_date']]
-    
+    prediction = prediction.loc[prediction[c_p['columns']['date_column']]==c_e['eval_date']] 
     all_model_list = c_p['eval_models']
     
     #if all models predicts -1, then I can safely drop patient-month-date row with -1 predictions here
     #select rows, where the first model is not -1 (all model predicts -1)
-        
-    print("start drop neg ")
     if c_e['drop_neg_prob'] == True:
         prediction = prediction[prediction[all_model_list[0]]!=-1]
-    print("start drop recent ")
+
     #remove recent referrals checking back k months in referral and drop them from prediction
     if c_e['drop_ref'] == True:
         prediction = Helper.drop_recent_referrals(c_p, c_r, c_e, referral, prediction)
-    print("end drop recent ")
+
     #pivot referral table
     referral['target'] = pd.Series(np.ones(referral.shape[0], dtype=float))
     referral = referral.pivot_table(index=c_r['columns']['id_column'], columns=c_r['columns']['date_column'], values='target', aggfunc='sum')
     referral = referral.fillna(0)
     
     all_model_evaluations = {} #{'model_name':score class object for that model}
-    print("starting to loop through models ")    
+   
     #now branch out for each model
     for model in all_model_list:
         

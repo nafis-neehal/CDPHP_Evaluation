@@ -36,8 +36,7 @@ def load_from_aws(bucket, directory, file):
     s3 = boto3.resource('s3')
     try:
         print("Loading from Pickle file")
-        print(bucket, key)
-        my_object = pickle.loads(s3.Object(bucket_name= bucket, key=directory+key).get()['Body'].read())
+        my_object = pickle.loads(s3.Object(bucket_name= bucket, key=directory+file).get()['Body'].read())
         
     except:
         print("Pickle loading failed, loading CSV")
