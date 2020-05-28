@@ -14,13 +14,17 @@
 
   c_r:
     bucket            : 'cdphp-rpi'
+    aws               : False
     dir               : './data/simulated_prediction_data/'
     file              : 'referrals.csv'
+    file_format       : 'csv'
     columns           :      
       id_column       : 'person_id'
       date_column     : 'date'
     date_format       : 'datetime'    
-    day_to_evaluate   : 1            
+    day_to_evaluate   : 1   
+
+    
 
   #-----------------------------
   #Configuration for EVALUATION

@@ -8,6 +8,7 @@ import Helper
 import pickle
 import s3fs
 import pyarrow.parquet as pq
+import Aws
 
 #for generation
 #generate random date between a range
@@ -125,22 +126,23 @@ def load_configuration(config_file, predictions_files):
     return c_r, c_e, c_gen, c_aws, c_visual, c_p
 
 
-def read_file(directory, file, file_format, s3, bucket=None, temp_dir='../data/tmp/', filters=None):
+def read_file(directory, file, file_format, aws=False, bucket=None, temp_dir='../data/tmp/', filters=None):
     #need to handle 4 cases of local/s3/csv/parquet
            
     if file_format in ['csv', 'pickle']:
-        if s3:
-            Helper.download_from_awss3(bucket, directory+file, temp_dir+file)
+        if aws:
+            Aws.download_from_aws(bucket, directory+file, temp_dir+file)
             directory=temp_dir
-        if format == 'csv':
+        if file_format == 'csv':
+            print("Reading file", directory+file)
             df = pd.read_csv(directory+file)
 
-        elif format=='pickle':
+        elif file_format=='pickle':
             df = pickle.loads(directory+file)
+        return df
 
-        filter=ds.field('c') == 2
     elif file_format == 'parquet':
-        if s3:
+        if aws:
             fs=s3fs.S3FileSystem()
             uri = 's3://'+bucket+directory+file
         else:
@@ -150,4 +152,4 @@ def read_file(directory, file, file_format, s3, bucket=None, temp_dir='../data/t
         table=dataset.read()
         df = table.to_pandas()
         del table
-    return df
+        return df

@@ -7,16 +7,13 @@ from IPython.core.display import display
 
 #cp, c_r, c_e are all mutable
 #mutable obj integrity checked
-def evaluate(c_p, c_r, c_e):
+def evaluate(c_p, c_e, c_r, referral ):
     
     eval_method = c_e['eval_method']      
     
-    if(c_e['aws']==True):
-        Aws.download_from_aws(c_r['bucket'], c_r['dir']+c_r['file'], c_r['dir']+c_r['file'])
+    if(c_p['aws']==True):
         Aws.download_from_aws(c_p['bucket'], c_p['dir']+c_p['file'], c_p['dir']+c_p['file']) 
-
-    referral = pd.read_csv(c_r['dir'] + c_r['file'])
-        
+       
     #convert_dates_ref(c_r)
     if c_r['date_format']=='ym':
         Helper.ym_to_datetime(c_r, referral) #passing reference of mutable referral, will be directly edited
