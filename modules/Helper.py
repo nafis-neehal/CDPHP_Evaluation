@@ -124,10 +124,11 @@ def load_configuration(config_file, predictions_files):
 
     return c_r, c_e, c_gen, c_aws, c_visual, c_p
 
-def read_file(directory, file, format, s3, bucket=None, temp_dir='../data/tmp/', filters=[]):
+
+def read_file(directory, file, file_format, s3, bucket=None, temp_dir='../data/tmp/', filters=None):
     #need to handle 4 cases of local/s3/csv/parquet
            
-    if format in ['csv', 'pickle']:
+    if file_format in ['csv', 'pickle']:
         if s3:
             Helper.download_from_awss3(bucket, directory+file, temp_dir+file)
             directory=temp_dir
@@ -138,14 +139,14 @@ def read_file(directory, file, format, s3, bucket=None, temp_dir='../data/tmp/',
             df = pickle.loads(directory+file)
 
         filter=ds.field('c') == 2
-    elif format == 'parquet':
+    elif file_format == 'parquet':
         if s3:
             fs=s3fs.S3FileSystem()
-            uri = 's3://'+bucket+directory+s3_file
+            uri = 's3://'+bucket+directory+file
         else:
             fs=None
             uri=directory+file
-        dataset=pq.ParquetDataset(path_=uri, filesystem=fs, filter=filters)
+        dataset=pq.ParquetDataset(uri, fs, filters=filters)
         table=dataset.read()
         df = table.to_pandas()
         del table
