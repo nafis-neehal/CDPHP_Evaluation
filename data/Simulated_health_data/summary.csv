@@ -1,2 +1,0 @@
-experiment,cadres,samples,cad_features,cad_inform,cad_redundant,cad_binary_x,dv_features,dv_inform,dv_redundant,dv_binary_x,classes,seed,classep,flip,interactions
-timeseries,10,1000,10,5,2,True,10,5,2,True,2,101,5,0,0
