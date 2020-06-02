@@ -31,73 +31,75 @@ def present_evaluation(c_p, c_r, c_e, c_visual, all_model_evaluations, table=Fal
     
     if c_visual['confusion_matrix']['plot'] == True:
         generate_confusion_matrix_plot(c_e, all_model_evaluations, c_visual['confusion_matrix']['model'], c_visual['confusion_matrix']['window'], 
-                                       c_visual['confusion_matrix']['thres'])
+                                       c_visual['confusion_matrix']['thres'], c_visual['confusion_matrix']['eval_method'])
     
     if c_visual['probability_distribution']['plot'] == True:
         generate_probability_distribution_plot(c_p, c_visual['probability_distribution']['models'])
     
     if c_e['save_csv'] == True:
-            if os.path.exists(result_file):
+            if os.path.exists(result_file) and c_e['append_csv']==True:
                 data.to_csv(result_file, index = False, float_format= '%8.5f', mode='a')
             else:
                 data.to_csv(result_file, index = False, float_format= '%8.5f', mode='w')
             if c_e['aws'] == True:
                 Aws.upload_to_aws(result_file, c_e['bucket'], result_file)
     
-#name of models, windows, top_ks
-def generate_confusion_matrix_plot(c_e, all_model_evaluations, model, window, thres):
-    confusion_matrix = all_model_evaluations[model].confusion_matrix
-    win = '[' + str(window[0]) + ',' + str(window[1]) + ']'
-    th = str(thres)
-    for keys in confusion_matrix.keys():
-        if win in keys and th in keys:
-            conf_mat = confusion_matrix[keys]
-            conf_mat = pd.DataFrame(conf_mat)
-            akws = {"ha": 'left',"va": 'top'}
-            plt.figure()
-            ax = sns.heatmap(conf_mat, annot=True, fmt="d", annot_kws=akws, cmap='Greens_r')
-            ax.set_title("Confusion Matrix of " + model + ' for window ' + win + ' for ' + c_e['eval_method'] + '_@' + str(thres))
+#name of models, windows, top_ks/threshold
+def generate_confusion_matrix_plot(c_e, all_model_evaluations, model, window, thres, eval_method):
+    pass 
+    # confusion_matrix = all_model_evaluations[model].confusion_matrix
+    # win = '[' + str(window[0]) + ',' + str(window[1]) + ']'
+    # th = str(thres)
+    # for keys in confusion_matrix.keys():
+    #     if win in keys and th in keys and eval_method in keys:
+    #         conf_mat = confusion_matrix[keys]
+    #         conf_mat = pd.DataFrame(conf_mat)
+    #         akws = {"ha": 'left',"va": 'top'}
+    #         plt.figure()
+    #         ax = sns.heatmap(conf_mat, annot=True, fmt="d", annot_kws=akws, cmap='Greens_r')
+    #         ax.set_title("Confusion Matrix of " + model + ' for window ' + win + ' for ' + eval_method + '_@' + str(thres))
 
 #input: c_p, list_of_models
 #output: probability distribution plots
 def generate_probability_distribution_plot(c_p, models):
-    file = c_p['dir'] + c_p['file']
-    pred = pd.read_csv(file)
-    for each_model in models:
-        plt.figure()
-        ax = sns.distplot(pred[each_model])
-        ax.set_title("Probability Distribution of " + each_model)
+    pass 
+    # file = c_p['dir'] + c_p['file']
+    # pred = pd.read_csv(file)
+    # for each_model in models:
+    #     plt.figure()
+    #     ax = sns.distplot(pred[each_model])
+    #     ax.set_title("Probability Distribution of " + each_model)
 
 #generate comparison plot
 def generate_comparison_plot(c_e, data, plot_window, metrics):
-    
-    for window in plot_window:
+    pass 
+    # for window in plot_window:
         
-        win = Helper.window_to_range(c_e, window)
-        new_data = data[data['Window']==win]
+    #     win = Helper.window_to_range(c_e, window)
+    #     new_data = data[data['Window']==win]
 
-        for t in c_e[c_e['eval_method']]:
-            metric_col = [col for col in new_data.columns if str(t) in col] #original column names for metrics (All 8 metric columns)
-            final_original_columns = ['Model']
-            final_modified_columns = ['Model']
+    #     for t in c_e[c_e['eval_method']]:
+    #         metric_col = [col for col in new_data.columns if str(t) in col] #original column names for metrics (All 8 metric columns)
+    #         final_original_columns = ['Model']
+    #         final_modified_columns = ['Model']
 
-            for metric_name in metrics:
-                final_original_columns = final_original_columns + [col for col in metric_col if metric_name in col] #only columns passed
-                final_modified_columns = final_modified_columns + [metric_name for col in metric_col if metric_name in col]
+    #         for metric_name in metrics:
+    #             final_original_columns = final_original_columns + [col for col in metric_col if metric_name in col] #only columns passed
+    #             final_modified_columns = final_modified_columns + [metric_name for col in metric_col if metric_name in col]
 
-            pf = new_data[final_original_columns].copy()
+    #         pf = new_data[final_original_columns].copy()
 
-            for i in range(len(pf.columns)):
-                pf.rename(columns={final_original_columns[i]:final_modified_columns[i]}, inplace=True)
+    #         for i in range(len(pf.columns)):
+    #             pf.rename(columns={final_original_columns[i]:final_modified_columns[i]}, inplace=True)
 
-            #pivot the data to covert wide dataframe to long dataframe
-            pf_new = pd.melt(pf, id_vars=['Model'], value_vars=final_modified_columns[1:])
+    #         #pivot the data to covert wide dataframe to long dataframe
+    #         pf_new = pd.melt(pf, id_vars=['Model'], value_vars=final_modified_columns[1:])
 
-            #data_plot = sns.catplot(x="variable", y="value", hue="Model", data=pf_new, kind="bar", height = 4, aspect = 3)
-            #data_plot.set_xlabels("Metrics")
-            #data_plot.set_ylabels("Score")
-            #title = "Performance of Models During " + win + " with " + c_e['eval_method'] + "_@" + str(t)
-            #data_plot.fig.suptitle(title)
+    #         data_plot = sns.catplot(x="variable", y="value", hue="Model", data=pf_new, kind="bar", height = 4, aspect = 3)
+    #         data_plot.set_xlabels("Metrics")
+    #         data_plot.set_ylabels("Score")
+    #         title = "Performance of Models During " + win + " with " + c_e['eval_method'] + "_@" + str(t)
+    #         data_plot.fig.suptitle(title)
 
 #takes all info, returns dataframe 
 def generate_tabular_data(c_p, c_r, c_e, c_visual, all_model_evaluations):
@@ -118,11 +120,15 @@ def generate_tabular_data(c_p, c_r, c_e, c_visual, all_model_evaluations):
             data.loc[row, 'Eval Date'] = c_e['eval_date']
             data.loc[row, 'Num Samples'] = all_model_evaluations[model].experimental_samples
             
-            #-- change here if both k and thresh needed
             for metric in metric_name:
                 
                 values  = [value for key, value in all_model_evaluations[model].__dict__[metric].items() if sub_key in key] #[K_50, K_60..]
-                    
+
+                if metric=='log_loss' or metric == 'brier_score_loss' or metric == 'roc_auc_score':
+                    data.loc[row, metric] = values[0]
+                    continue                
+                
+                #-----------------------------------------------------------------------------
                 if c_e['eval_method'] == 'top_k':
                     
                     for i in range(len(c_e['top_k'])):
@@ -138,10 +144,51 @@ def generate_tabular_data(c_p, c_r, c_e, c_visual, all_model_evaluations):
                             col_label = metric + '_@k='+str(c_e['top_k'][i])
                             data.loc[row, col_label] = values[i]
                 
+                #-----------------------------------------------------------------------------
                 elif c_e['eval_method'] == 'thresholding':
+
                     for i in range(len(c_e['thresholding'])):
-                        col_label = metric + '_p>'+str(c_e['thresholding'][i])
-                        data.loc[row, col_label] = values[i]
+                        if metric=='confusion_matrix':
+                            conf_mat = values[i].ravel()
+                            
+                            for j in range(len(conf_mat)):
+                                label = conf_head[j]
+                                col_label = label + '_@p>='+str(c_e['thresholding'][i])
+                                data.ix[row, col_label] = conf_mat[j] 
+                            
+                        else:
+                            col_label = metric + '_@p>='+str(c_e['thresholding'][i])
+                            data.loc[row, col_label] = values[i]
+                
+                #-----------------------------------------------------------------------------
+                elif c_e['eval_method'] == 'both':
+
+                    for i in range(len(c_e['top_k'])):
+                        if metric=='confusion_matrix':
+                            conf_mat = values[i].ravel()
+
+                            for j in range(len(conf_mat)):
+                                    label = conf_head[j]
+                                    col_label = label + '_@k='+str(c_e['top_k'][i])
+                                    data.ix[row, col_label] = conf_mat[j] 
+                        else:
+                            col_label = metric + '_@k='+str(c_e['top_k'][i])
+                            data.loc[row, col_label] = values[i]
+
+
+                    for i in range(len(c_e['top_k']), len(c_e['top_k'] + c_e['thresholding'])):
+                        if metric=='confusion_matrix':
+                            conf_mat = values[i].ravel()
+                            
+                            for j in range(len(conf_mat)):
+                                label = conf_head[j]
+                                col_label = label + '_@p>='+str(c_e['thresholding'][i-2])
+                                data.ix[row, col_label] = conf_mat[j] 
+                            
+                        else:
+                            col_label = metric + '_@p>='+str(c_e['thresholding'][i-2])
+                            data.loc[row, col_label] = values[i]
+
             
             #source files
             data.loc[row, 'Prediction Source'] = c_p['dir'] + c_p['file']

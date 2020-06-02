@@ -86,14 +86,26 @@ def evaluate(c_p, c_e, c_r, referral, prediction ):
             #now thresholding method
             if eval_method=='top_k':
                 for k_values in c_e['top_k']:
-                    label = model+'_window_['+str(window[0])+','+str(window[1])+']_'+eval_method + '_@' + str(k_values)
+                    label = model+'_window_['+str(window[0])+','+str(window[1])+']_'+eval_method + '_@k=' + str(k_values)
                     prediction[label] = Helper.prob_to_bin(prediction[model], k_values)
                     #model score for this (window,k) update
                     update_model_score(model, evaluated_model_obj, label, y_true, prediction)
     
             elif eval_method == 'thresholding':
                 for thresholds in c_e['thresholding']:
-                    label = model+'_window_['+str(window[0])+','+str(window[1])+']_'+eval_method + '_@' + str(thresholds)
+                    label = model+'_window_['+str(window[0])+','+str(window[1])+']_'+eval_method + '_@p>=' + str(thresholds)
+                    prediction[label] = np.where(prediction[model] > thresholds, 1, 0)
+                    #model score for this (window,threshold) update
+                    update_model_score(model, evaluated_model_obj, label, y_true, prediction)
+
+            elif eval_method == 'both':
+                for k_values in c_e['top_k']:
+                    label = model+'_window_['+str(window[0])+','+str(window[1])+']_'+ 'top_k' + '_@k=' + str(k_values)
+                    prediction[label] = Helper.prob_to_bin(prediction[model], k_values)
+                    #model score for this (window,k) update
+                    update_model_score(model, evaluated_model_obj, label, y_true, prediction)
+                for thresholds in c_e['thresholding']:
+                    label = model+'_window_['+str(window[0])+','+str(window[1])+']_'+ 'thresholding' + '_@p>=' + str(thresholds)
                     prediction[label] = np.where(prediction[model] > thresholds, 1, 0)
                     #model score for this (window,threshold) update
                     update_model_score(model, evaluated_model_obj, label, y_true, prediction)

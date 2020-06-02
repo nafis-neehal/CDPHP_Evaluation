@@ -1,5 +1,4 @@
 ---
-
   #------------------------------------
   #Configuration for the REFERRAL file
   #------------------------------------
@@ -31,12 +30,13 @@
   #-----------------------------
   #experiment         - name of the experiment / version / anything
   #save_csv           - if you want to save the csv file in the specified dir + file.
+  #append_csv         - if you want to append all your experiment data into one file. O/w result file will be overwritten every time.
   #dir                - give the directory or the pre_key where result will be saved
   #file               - give the file name or the key where result will be saved
   #eval_models        - name(s) of the models you want to use (all/selected) in your evaluation from all the models in prediction file.
   #eval_windows       - list of the windows you want to evaluate. Can be a negative window. [-2,2] for Jan 2017 = [Nov, Dec, Jan, Feb, March].
   #eval_date          - date you want to evaluate on. Has to be the first day of the month. Can be any month-year. (Format: YYYY-MM-DD)
-  #eval_method        - either 'top_k' or 'thresholding'. Mutually exclusive. You can't choose both. O/W adds unnecessary complexity.
+  #eval_method        - either 'top_k' or 'thresholding'. Mutually exclusive. You can't choose both. O/W adds unnecessary complexity. Also can use 'both' if want to see both results.
   #thresholding       - values you want to check thresholding method for. Has to be a list. Can be single/multiple values at a time.
   #top_k              - values you want to check top_k method for. Has to be a list. Can be single/multiple values at a time.
   #recent_ref_window  - number of previous months you want to drop referral for. If 3, on Jan 2017, then Oct, Nov, Dec 2016 will be dropped.
@@ -49,11 +49,12 @@
   c_e:
     experiment        : 'Version 1.0'
     save_csv          : True
+    append_csv        : False 
     dir               : './results/'
     file              : 'results.csv'
-    eval_windows      : [[-3,6], [0,3], [0,6], [0,12]]   
+    eval_windows      : [[0,3], [0,6], [0,12]]   
     eval_date         : '2017-01-01'
-    eval_method       : 'top_k'      
+    eval_method       : 'both'      
     thresholding      : [0.5, 0.6]
     top_k             : [50,60]
     recent_ref_window : 6
@@ -69,38 +70,40 @@
 #show                 :if you want to see the results in a tabular format/dataframe. The result can be seen from the saved CSV file too.
 #metrics              :list of the metrics you want to see in the table for all model for all evaluation window. Must be a LIST.
 
-#MODEL COMPARISON PLOT
+#MODEL COMPARISON PLOT (Need to convert to Matplotlib, SNS Version Issue)
 #plot                 :if you want to see plots (sns.catplot/bar) of comparisons between models. Will be shown for ALL top_k/threshold values.
 #metrics              :list of the metrics you want to see in the plot for all model. Must be a LIST. Can choose single/multiple metrics.
 #window               :list of the evaluation windows you want to see your plots for. Must be a LIST. Can choose single/multiple windows.
 
-#CONFUSION MATRIX PLOT
+#CONFUSION MATRIX PLOT (Need to convert to Matplotlib; SNS Version Issue)
 #plot                 :if you want to see plots (sns.heatmap) of confusion matrix. 
 #model                :name of the model you want to see the confusion matrix for. Only ONE model at a time.
 #window               :window you want to see the confusion matrix for. Only ONE window at a time.
 #thres                :top_k / thresholding value depending on the evaluation method used in c_e. Only ONE value at a time.
+#eval_method          :you need to specify only one eval method - threshold / top_k
 
-#PROBABILITY DISTRIBUTIONS OF MODELS PLOT
+#PROBABILITY DISTRIBUTIONS OF MODELS PLOT (Need to convert to Matplotlib; SNS Version Issue)
 #plot                 :if you want to see plots (sns.distplot) of probability distributions of each model. 
 #models               :list of models you want to see distribution for. Can choose single/multiple models.
 
   c_visual:
     table : 
-      show            :  True
+      show            :  True   
       metrics         : ['confusion_matrix','precision', 'recall', 'accuracy', 'balanced_acc', 'f1_score', 'log_loss', 
                           'roc_auc_score', 'brier_score_loss']
     model_comparison:
-      plot            : True
+      plot            : False   
       metrics         : ['precision','recall', 'accuracy', 'balanced_acc', 'f1_score', 'log_loss', 'roc_auc_score', 
                           'brier_score_loss']
       windows         : [[0,3], [0,6]]
     confusion_matrix: 
-      plot            : True
+      plot            : False  
       model           : 'lin_reg'
       window          : [0,3]
-      thres           : 50
+      thres           : 0.5
+      eval_method     : 'thresholding'
     probability_distribution: 
-      plot            : True
+      plot            : False 
       models          : ['lin_reg', 'rand_forest', 'xg_boost', 'sgmm']
   
   
