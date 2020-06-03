@@ -12,7 +12,7 @@
   #day_to_evaluate    - referral can be on any day in a month. All referral dates have been converted to the first day of that month.
 
   c_r:
-    bucket            : 'cdphp-rpi'
+    bucket            : 'cdphp.rpi'
     aws               : False
     dir               : './data/simulated_prediction_data/'
     file              : 'referrals.csv'
@@ -61,7 +61,7 @@
     drop_ref          : True 
     drop_neg_prob     : True
     aws               : False
-    bucket            : 'cdphp-rpi' 
+    bucket            : 'cdphp.rpi' 
 
 #-------------------------------
 #Configuration for VISUALIZATION
@@ -88,7 +88,7 @@
 
   c_visual:
     table : 
-      show            :  True   
+      show            :  True     
       metrics         : ['confusion_matrix','precision', 'recall', 'accuracy', 'balanced_acc', 'f1_score', 'log_loss', 
                           'roc_auc_score', 'brier_score_loss']
     model_comparison:

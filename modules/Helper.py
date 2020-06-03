@@ -8,6 +8,7 @@ import pickle
 import s3fs
 import pyarrow.parquet as pq
 import Aws
+import os 
 
 #for generation
 #generate random date between a range
@@ -110,7 +111,7 @@ def load_yaml(file):
     with open(file) as f:
         return yaml.safe_load(f)
 
-def load_configuration(config_file, predictions_files):
+def load_configuration(config_file, prediction_config_files):
     config=load_yaml(config_file)
     c_r = config['c_r']  #Details on the referral file
     c_e = config['c_e']  #Details on the experiment settings (evaluation date, windows, etc.)
@@ -119,13 +120,13 @@ def load_configuration(config_file, predictions_files):
     c_visual = config['c_visual']
     c_e['eval_date'] = pd.to_datetime(c_e['eval_date'])
     c_p=[]
-    for file in predictions_files:
+    for file in prediction_config_files:
         config=load_yaml(file)
         c_p.append(config['c_p'])
 
     return c_r, c_e, c_gen, c_aws, c_visual, c_p
 
-
+#returns a df
 def read_file(directory, file, file_format, aws=False, bucket=None, temp_dir='../data/tmp/', filters=None):
     #need to handle 4 cases of local/s3/csv/parquet
          
@@ -133,15 +134,18 @@ def read_file(directory, file, file_format, aws=False, bucket=None, temp_dir='..
         if aws:
             df= Aws.load_from_aws(bucket=bucket, directory=directory, file=file)
         else:
+            assert (os.path.exists(directory+file)), directory + file + " does not exist"
             df= pd.read_csv(directory+file)
         return df
-
+    
     elif file_format == 'parquet':
         if aws:
             fs=s3fs.S3FileSystem()
+            assert fs.exists('s3://'+bucket+directory+file), 's3://'+bucket+directory+file+" does not exist"
             uri = 's3://'+bucket+directory+file
         else:
             fs=None
+            assert (os.path.exists(directory+file)), directory + file + " does not exist"
             uri=directory+file
         dataset=pq.ParquetDataset(uri, fs, filters=filters)
         table=dataset.read()

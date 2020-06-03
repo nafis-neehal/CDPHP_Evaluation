@@ -5,8 +5,8 @@ import pickle
 
 #--------------------------------------------------
 #add the access keys here (Jason's S3 - RPI Org)
-#ACCESS_KEY = 
-#SECRET_KEY = 
+ACCESS_KEY = 'AKIA2W36TZO4GGFOD2GS'
+SECRET_KEY = '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'
 #--------------------------------------------------
 
 def upload_to_aws(local_file, bucket, s3_file):
@@ -39,14 +39,26 @@ def load_from_aws(bucket, directory, file):
         my_object = pickle.loads(s3.Object(bucket_name= bucket, key=directory+file).get()['Body'].read())
         
     except:
-        print("Pickle loading failed, loading CSV")
-        f_name = file
+        try:
+            print("Pickle loading failed, loading CSV")
+            f_name = file
 
-        a = s3.Object(bucket_name = bucket, key = directory+file).download_file(
-            file)
+            a = s3.Object(bucket_name = bucket, key = directory+file).download_file(
+                file)
+            
+            my_object = pd.read_csv(file)
         
-        my_object = pd.read_csv(file)
+        except ClientError:
+            print("Client Error")
+            return False
+        except ConnectionError:
+            print("Connection Error")
+            return False
+        except FileNotFoundError:
+            print("The file was not found")
+            return False
     
+    #returns dataframe
     return my_object
     
 def download_from_aws(bucket, s3_file, local_file):

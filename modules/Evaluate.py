@@ -8,6 +8,10 @@ from IPython.core.display import display
 #cp, c_r, c_e are all mutable
 #mutable obj integrity checked
 def evaluate(c_p, c_e, c_r, referral, prediction ):
+
+    #assert if referral and prediction dfs both are non-empty
+    assert (not(referral.empty)), "Referral is empty at the beginning of evaluation"
+    assert (not(prediction.empty)), "Prediction is empty at the beginning of evaluation"
     
     eval_method = c_e['eval_method']      
        
@@ -24,6 +28,9 @@ def evaluate(c_p, c_e, c_r, referral, prediction ):
         Helper.ym_to_datetime(c_p, prediction) #passing reference of mutable prediction, will be directly edited
     else:
         prediction[c_p['columns']['date_column']] = pd.to_datetime(prediction[c_p['columns']['date_column']])
+
+    #check if eval date exists in prediction file 
+    assert (sum(prediction[c_p['columns']['date_column']]==c_e['eval_date'])!=0), "Evaluation Date " + c_e['eval_date'] + " doesn't exist in prediction"
         
     #now both referral and prediction are datetime
     ##only applying top_k in selected range, not the whole column-------------------->>>>>>>
@@ -34,10 +41,12 @@ def evaluate(c_p, c_e, c_r, referral, prediction ):
     #select rows, where the first model is not -1 (all model predicts -1)
     if c_e['drop_neg_prob'] == True:
         prediction = prediction[prediction[all_model_list[0]]!=-1]
+        assert (not(prediction.empty)), "Prediction df is empty after dropping negative probability"
 
     #remove recent referrals checking back k months in referral and drop them from prediction
     if c_e['drop_ref'] == True:
         prediction = Helper.drop_recent_referrals(c_p, c_r, c_e, referral, prediction)
+        assert (not(prediction.empty)), "Prediction df is empty after dropping recent referrals"
 
     #pivot referral table
     referral['target'] = pd.Series(np.ones(referral.shape[0], dtype=float))
@@ -64,6 +73,7 @@ def evaluate(c_p, c_e, c_r, referral, prediction ):
             
             sl=slice(start,end)
             y_true = referral.loc[:,sl] #also a shallow copy
+            assert (not(y_true.empty)), "Referral y_true df is empty after window slicing"
             
             #aggregate referrals
             y_true = y_true.sum(axis=1)
@@ -74,6 +84,7 @@ def evaluate(c_p, c_e, c_r, referral, prediction ):
             #for the time being, all ref patients are in pred_list. 
             #Change random.randint upper_range in data_generate to tweak
             y_true=y_true[y_true.index.isin(prediction[c_p['columns']['id_column']])]
+            assert (not(y_true.empty)), "Referral y_true df is empty after overlapping with prediction df"
             
             y_true=y_true.append(pd.Series(0,index=set(prediction[c_p['columns']['id_column']])-set(y_true.index))).sort_index()
         
