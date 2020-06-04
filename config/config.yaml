@@ -8,7 +8,6 @@
   #file               - give the file name or the key where the referral file will be pulled from ('key' in S3)
   #columns            - type a identifier for the column name (i.e. id_column) and then the name of the actual column name in file 
   #                     (i.e. 'person_id'). One row for each column. 
-  #date_format        - options: 'ym(i.e 201701)', 'y-m-d(i.e '2017-01-01')', datetime(i.e pd.datetime('2017-01-01'))
   #day_to_evaluate    - referral can be on any day in a month. All referral dates have been converted to the first day of that month.
 
   c_r:
@@ -18,10 +17,8 @@
     file              : 'referrals.csv'
     file_format       : 'csv'
     columns           :      
-      id_column       : 'person_id'
-      date_column     : 'date'
-    date_format       : 'datetime'    
-    day_to_evaluate   : 1   
+      id_column       : 'PERSON_ID'
+      date_column     : 'MYR'     
 
     
 
@@ -35,7 +32,7 @@
   #file               - give the file name or the key where result will be saved
   #eval_models        - name(s) of the models you want to use (all/selected) in your evaluation from all the models in prediction file.
   #eval_windows       - list of the windows you want to evaluate. Can be a negative window. [-2,2] for Jan 2017 = [Nov, Dec, Jan, Feb, March].
-  #eval_date          - date you want to evaluate on. Has to be the first day of the month. Can be any month-year. (Format: YYYY-MM-DD)
+  #eval_date          - Month you want to evaluate on. Can be any month-year. (Format: YYYYMM)
   #eval_method        - either 'top_k' or 'thresholding'. Mutually exclusive. You can't choose both. O/W adds unnecessary complexity. Also can use 'both' if want to see both results.
   #thresholding       - values you want to check thresholding method for. Has to be a list. Can be single/multiple values at a time.
   #top_k              - values you want to check top_k method for. Has to be a list. Can be single/multiple values at a time.
@@ -53,7 +50,7 @@
     dir               : './results/'
     file              : 'results.csv'
     eval_windows      : [[0,3], [0,6], [0,12]]   
-    eval_date         : '2017-01-01'
+    eval_date         : '201701'
     eval_method       : 'both'      
     thresholding      : [0.5, 0.6]
     top_k             : [50,60]
@@ -88,7 +85,7 @@
 
   c_visual:
     table : 
-      show            :  True     
+      show            :  True       
       metrics         : ['confusion_matrix','precision', 'recall', 'accuracy', 'balanced_acc', 'f1_score', 'log_loss', 
                           'roc_auc_score', 'brier_score_loss']
     model_comparison:
@@ -124,19 +121,19 @@
     pred:
       file            : 'predictions.csv'
       columns :
-          id_column       : 'person_id'
-          date_column     : 'date'
+          id_column       : 'PERSON_ID'
+          date_column     : 'MYR'
 
       model_columns   : ['lin_reg', 'rand_forest', 'xg_boost', 'sgmm'] #generating different model columns
       num_samples     : 500           #don't bother about this, this is just used while generating synthetic data
       start_date      : '2016-01-01'  #prediction starts from January 2016
       end_date        : '2018-01-01'  #prediction ends on December 2017
-      date_format    : 'ym'
+      date_format     : 'ym'
     ref:
       file            : 'referrals.csv'
       columns :
-          id_column       : 'person_id'
-          date_column     : 'date'
+          id_column       : 'PERSON_ID'
+          date_column     : 'MYR'
       num_samples     : 25            #don't bother about this, this is just used while generating synthetic data
       upper_bound     : 1000          #upper bound for random range of synthetic referral data ID samples
       start_date      : '2016-01-01'  #referral starts from January 2016

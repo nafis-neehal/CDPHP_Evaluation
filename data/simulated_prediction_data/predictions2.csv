@@ -1,4 +1,4 @@
-person_id,date,lin_reg,rand_forest,xg_boost,sgmm
+PERSON_ID,MYR,lin_reg,rand_forest,xg_boost,sgmm
 0,201601, 0.19152, 0.95376, 0.25800, 0.72728
 0,201602, 0.62211, 0.99213, 0.48665, 0.72066
 0,201603, 0.43773, 0.47960, 0.78307, 0.76230

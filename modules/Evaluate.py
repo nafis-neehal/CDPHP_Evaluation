@@ -3,6 +3,7 @@ import Score
 import Aws
 import pandas as pd
 import numpy as np
+from datetime import datetime
 from IPython.core.display import display
 
 #cp, c_r, c_e are all mutable
@@ -12,30 +13,39 @@ def evaluate(c_p, c_e, c_r, referral, prediction ):
     #assert if referral and prediction dfs both are non-empty
     assert (not(referral.empty)), "Referral is empty at the beginning of evaluation"
     assert (not(prediction.empty)), "Prediction is empty at the beginning of evaluation"
-    
-    eval_method = c_e['eval_method']      
-       
-    #convert_dates_ref(c_r)
-    if c_r['date_format']=='ym':
-        df = Helper.ym_to_datetime(c_r, referral) #passing reference of mutable referral, will be directly edited
-    else:
-        referral[c_r['columns']['date_column']] = pd.to_datetime(referral[c_r['columns']['date_column']])
-        Helper.convert_dates_ref(referral, c_r)
 
-     
-    #change date from ym to ymd here
-    if c_p['date_format']=='ym':
-        Helper.ym_to_datetime(c_p, prediction) #passing reference of mutable prediction, will be directly edited
-    else:
-        prediction[c_p['columns']['date_column']] = pd.to_datetime(prediction[c_p['columns']['date_column']])
+    #assert for column matches between config and data files
+    #check if columns mentioned under c_r['columns'] and c_p['columns'] are available in referral and prediction data
+    assert Helper.column_exists(referral, c_r['columns']), "Column mismatch for referral"
+    assert Helper.column_exists(prediction, c_p['columns']), "Column mismatch for prediction"
+
+    #extract only the PERSON_ID and MYR column from referral and save it as the new referral dataframe
+    referral = referral[list(c_r['columns'].values())].copy() 
+
+    #model columns extract
+    prediction_columns = list(prediction.columns)
+    all_model_list = prediction_columns[2:]
+    c_p['eval_models'] = all_model_list
+    
+    #alias
+    eval_method = c_e['eval_method']
+    eval_date = c_e['eval_date']
+
+    #convert referral and prediction patient IDs to string
+    referral[c_r['columns']['id_column']] = referral[c_r['columns']['id_column']].astype(str)
+    prediction[c_r['columns']['id_column']] = prediction[c_r['columns']['id_column']].astype(str)
+
+    #convert referral and prediction date column to string %Y%M format
+    referral[c_r['columns']['date_column']] = pd.to_datetime(referral[c_r['columns']['date_column']]).dt.strftime('%Y%m')
+    prediction[c_p['columns']['date_column']] = pd.to_datetime(prediction[c_p['columns']['date_column']], format='%Y%m').dt.strftime('%Y%m')
+
+    #set overlap check
+    Helper.overlap_set_check(referral, prediction)
 
     #check if eval date exists in prediction file 
-    assert (sum(prediction[c_p['columns']['date_column']]==c_e['eval_date'])!=0), "Evaluation Date " + c_e['eval_date'] + " doesn't exist in prediction"
-        
-    #now both referral and prediction are datetime
-    ##only applying top_k in selected range, not the whole column-------------------->>>>>>>
-    prediction = prediction.loc[prediction[c_p['columns']['date_column']]==c_e['eval_date']] 
-    all_model_list = c_p['eval_models']
+    assert (sum(prediction[c_p['columns']['date_column']]==eval_date)!=0), "Evaluation Month " + eval_date + " doesn't exist in prediction"
+
+    prediction = prediction.loc[prediction[c_p['columns']['date_column']]==eval_date] 
     
     #if all models predicts -1, then I can safely drop patient-month-date row with -1 predictions here
     #select rows, where the first model is not -1 (all model predicts -1)
@@ -45,7 +55,7 @@ def evaluate(c_p, c_e, c_r, referral, prediction ):
 
     #remove recent referrals checking back k months in referral and drop them from prediction
     if c_e['drop_ref'] == True:
-        prediction = Helper.drop_recent_referrals(c_p, c_r, c_e, referral, prediction)
+        prediction = Helper.drop_recent_referrals(c_p, c_r, c_e, eval_date, referral, prediction)
         assert (not(prediction.empty)), "Prediction df is empty after dropping recent referrals"
 
     #pivot referral table
@@ -65,12 +75,15 @@ def evaluate(c_p, c_e, c_r, referral, prediction ):
             
             #taking negative window into consideration
             if(window[0]<0):
-                start = c_e['eval_date'] - pd.DateOffset(months=(-1)*window[0])
+                start = datetime.strptime(eval_date, '%Y%m') - pd.DateOffset(months=(-1)*window[0])
             else:
-                start = c_e['eval_date'] + pd.DateOffset(months=window[0])
+                start = datetime.strptime(eval_date, '%Y%m') + pd.DateOffset(months=window[0])
                 
-            end = c_e['eval_date'] + pd.DateOffset(months=window[1])
+            end = datetime.strptime(eval_date, '%Y%m') + pd.DateOffset(months=window[1])
             
+            start = datetime.strftime(start, '%Y%m')
+            end = datetime.strftime(end, '%Y%m')
+
             sl=slice(start,end)
             y_true = referral.loc[:,sl] #also a shallow copy
             assert (not(y_true.empty)), "Referral y_true df is empty after window slicing"

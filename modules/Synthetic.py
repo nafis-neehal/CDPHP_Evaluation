@@ -25,7 +25,7 @@ def generate_synthetic_prediction_data(c_gen ):
     patients = pd.Series(range(0, c_gen['pred']['num_samples'])) #500
     
     if c_gen['pred']['date_format']=='ym':
-        date = pd.date_range(c_gen['pred']['start_date'], c_gen['pred']['end_date'], freq='MS').strftime("%Y%m").astype(int) #25
+        date = pd.date_range(c_gen['pred']['start_date'], c_gen['pred']['end_date'], freq='MS').strftime("%Y%m") #25
     elif c_gen['pred']['date_format']=='y-m-d':
         date = pd.date_range(c_gen['pred']['start_date'], c_gen['pred']['end_date'], freq='MS').strftime("%Y-%m-%d")
     else:

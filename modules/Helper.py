@@ -35,18 +35,6 @@ def generate_random_date(start_date, end_date, iteration, date_format):
     return date_list
 
 #for evaluation
-#preprocess referral dates
-#convert any day in any month to the first day of that month in REFERRAL data
-#mutable obj integrity checked
-#ref_copy passed by reference, changed directly
-def convert_dates_ref(ref_copy, c_r): #use if c_r['date_format'] is 'y-m-d' or datetime
-    ref_date_column = ref_copy[c_r['columns']['date_column']]
-    for i in range(len(ref_date_column)):
-        formatted_date = ref_date_column[i]
-        new_formatted_date = datetime(formatted_date.year, formatted_date.month, c_r['day_to_evaluate'])
-        ref_copy.at[i,c_r['columns']['date_column']] = new_formatted_date
-
-#for evaluation
 #convert top k probability of a target to 1, O/W to 0 mapping
 #target was a pd.series, kept intact
 #mutable obj integrity checked
@@ -60,31 +48,10 @@ def prob_to_bin(target, k):
 #return local variable, it does not get lost, stays in heap as long as there is a reference to it. O/W garbage collector.
 
 #for evaluation
-'''
-pd.to_Datetime(anything) = create datetime object
-datetime.strptime(string) -> datetime object
-datetime.strftime(datetime) -> string in different formats
-'''
-
-
-#give a 'ym' column, it will convert all of them to datetime
-#mutable obj integrity checked
-#updated mutable dataframe passed by reference
-def ym_to_datetime(config, df): #ym to datetime
-    label = config['columns']['date_column']
-    df[label]=df[label].astype(str)
-    df[label]=pd.to_datetime(df[label],format='%Y%m')
-    #for i in range(df[label].size):
-    #    df[label][i] = df[label][i][:4] + '-' + df[label][i][4:] + '-01' #choosing the first month of the day
-    #df[label] = pd.to_datetime(df[label])
-    #return df
-
-
-#for evaluation
-def drop_recent_referrals(c_p, c_r, c_e, ref_copy, pred_copy):
-    start = c_e['eval_date'] - pd.DateOffset(months=c_e['recent_ref_window'])
-    end = c_e['eval_date'] - pd.DateOffset(months=1) #ends the previous month of the current month
-    mask = (ref_copy[c_r['columns']['date_column']]>=start) & (ref_copy[c_r['columns']['date_column']]<=end)
+def drop_recent_referrals(c_p, c_r, c_e, eval_date, ref_copy, pred_copy):
+    start = datetime.strptime(eval_date, '%Y%m') - pd.DateOffset(months=c_e['recent_ref_window'])
+    end =   datetime.strptime(eval_date, '%Y%m') - pd.DateOffset(months=1) #ends the previous month of the current month
+    mask = (pd.to_datetime(ref_copy[c_r['columns']['date_column']], format='%Y%m')>=start) & (pd.to_datetime(ref_copy[c_r['columns']['date_column']], format='%Y%m')<=end)
 
     #those IDs from prediction (0-500) that are not in list of those IDs that fall in daterange of all IDs(0-1000)
     idx = ~pred_copy[c_p['columns']['id_column']].isin(ref_copy.loc[mask][c_r['columns']['id_column']])
@@ -95,14 +62,14 @@ def drop_recent_referrals(c_p, c_r, c_e, ref_copy, pred_copy):
 def window_to_range(c_e, window):
 
     if(window[0]<0):
-        start = c_e['eval_date'] - pd.DateOffset(months=(-1)*window[0])
+        start = datetime.strptime(c_e['eval_date'], '%Y%m') - pd.DateOffset(months=(-1)*window[0])
     else:
-        start = c_e['eval_date'] + pd.DateOffset(months=window[0])
+        start = datetime.strptime(c_e['eval_date'], '%Y%m') + pd.DateOffset(months=window[0])
+        
+    end = datetime.strptime(c_e['eval_date'], '%Y%m') + pd.DateOffset(months=window[1])
 
-    end = c_e['eval_date'] + pd.DateOffset(months=window[1])
-
-    start = start.strftime('%Y/%m')
-    end = end.strftime('%Y/%m')
+    start = datetime.strftime(start, '%Y%m')
+    end = datetime.strftime(end, '%Y%m')
 
     win_range = start + '-' + end
     return win_range
@@ -118,7 +85,7 @@ def load_configuration(config_file, prediction_config_files):
     c_gen = config['c_gen']  #Configuration for aws
     c_aws = config['c_aws']  #Configuration for aws
     c_visual = config['c_visual']
-    c_e['eval_date'] = pd.to_datetime(c_e['eval_date'])
+    #c_e['eval_date'] = pd.to_datetime(c_e['eval_date'])
     c_p=[]
     for file in prediction_config_files:
         config=load_yaml(file)
@@ -152,3 +119,30 @@ def read_file(directory, file, file_format, aws=False, bucket=None, temp_dir='..
         df = table.to_pandas()
         del table
         return df
+
+#get the min and max date in prediction file
+def date_range(c_p, prediction):
+    date_col = prediction[c_p['columns']['date_column']]
+    min_date = min(date_col)
+    max_date = max(date_col)
+    print("Min Date in Prediction: ",min_date)
+    print("Max Date in Prediction: ",max_date)
+
+#overlap set check
+def overlap_set_check(referral, prediction):
+    r=set(referral['PERSON_ID'].unique())
+    p=set(prediction['PERSON_ID'].unique())
+    print("Number of Unique IDs in Referral:",len(r))
+    print("Number of Unique IDs in Prediction:",len(p))
+    result=p.intersection(r)
+    print("Number of Intersected IDs:", len(result))
+
+#boolean assert
+#check if all columns of column_dict from config exists in dataframe(referral/prediction)
+def column_exists(dataframe, column_dict):
+    df_columns = list(dataframe.columns)
+    config_columns = list(column_dict.values())
+    print("Columns from dataframe (referral/prediction):", df_columns)
+    print("Columns from config(c_r/c_p):", config_columns)
+    check =  all(item in df_columns for item in config_columns)
+    return check
