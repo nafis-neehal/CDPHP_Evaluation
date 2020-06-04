@@ -3,7 +3,10 @@ This fixed the issue with missmatched.
 ```
 prediction.drop_duplicates(subset=['PERSON_ID','MYR'], inplace=True)
 ```
-
+This got rid of negative patient ids.
+```
+prediction.loc[prediction['PERSON_ID'].astype(int)>0,:]
+```
 
 
 Changes to be implemented: 
