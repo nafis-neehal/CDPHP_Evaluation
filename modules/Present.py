@@ -11,38 +11,60 @@ import Helper, Aws
 #save result to CSV file: Use dataframe_to_csv() helper function
 #mutable obj integrity checked
 def present_evaluation(c_p, c_r, c_e, c_visual, all_model_evaluations, table=False, plot = False, save=False):
-    
-    #result fileca
-    result_file = c_e['dir'] + c_e['file']
-    
-    #clear if there is already any result file previously (from previous run/experiment), 
-    #otherwise it will just keep appending, as opening in append mode
+
+    for model in all_model_evaluations:
+        model_score_obj = all_model_evaluations[model]
+        print("Precision")
+        display(model_score_obj.precision)
+        print("Recall")
+        display(model_score_obj.recall)
+        print("F1_Score")
+        display(model_score_obj.f1_score)
+        print("Accuracy")
+        display(model_score_obj.accuracy)
+        print("Confusion Matrix, = [TN, FP, FN, TP]")
+        display(model_score_obj.confusion_matrix)
+        print("Balanced Acc")
+        display(model_score_obj.balanced_acc)
+        print("Log Loss")
+        display(model_score_obj.log_loss)
+        print("ROC Score")
+        display(model_score_obj.roc_auc_score)
+        print("Brier Score Loss")
+        display(model_score_obj.brier_score_loss)
         
-    data = generate_tabular_data(c_p, c_r, c_e, c_visual, all_model_evaluations)
     
-    if c_visual['table']['show'] == True:
-        pd.set_option('display.max_columns', 9999)
-        pd.options.display.float_format = '{:8.5f}'.format
-        display(data)
+    # #result fileca
+    # result_file = c_e['dir'] + c_e['file']
+    
+    # #clear if there is already any result file previously (from previous run/experiment), 
+    # #otherwise it will just keep appending, as opening in append mode
         
-    #will add graph here
-    if c_visual['model_comparison']['plot'] == True:
-        generate_comparison_plot(c_e, data, c_visual['model_comparison']['windows'], c_visual['model_comparison']['metrics'])
+    # data = generate_tabular_data(c_p, c_r, c_e, c_visual, all_model_evaluations)
     
-    if c_visual['confusion_matrix']['plot'] == True:
-        generate_confusion_matrix_plot(c_e, all_model_evaluations, c_visual['confusion_matrix']['model'], c_visual['confusion_matrix']['window'], 
-                                       c_visual['confusion_matrix']['thres'], c_visual['confusion_matrix']['eval_method'])
+    # if c_visual['table']['show'] == True:
+    #     pd.set_option('display.max_columns', 9999)
+    #     pd.options.display.float_format = '{:8.5f}'.format
+    #     display(data)
+        
+    # #will add graph here
+    # if c_visual['model_comparison']['plot'] == True:
+    #     generate_comparison_plot(c_e, data, c_visual['model_comparison']['windows'], c_visual['model_comparison']['metrics'])
     
-    if c_visual['probability_distribution']['plot'] == True:
-        generate_probability_distribution_plot(c_p, c_visual['probability_distribution']['models'])
+    # if c_visual['confusion_matrix']['plot'] == True:
+    #     generate_confusion_matrix_plot(c_e, all_model_evaluations, c_visual['confusion_matrix']['model'], c_visual['confusion_matrix']['window'], 
+    #                                    c_visual['confusion_matrix']['thres'], c_visual['confusion_matrix']['eval_method'])
     
-    if c_e['save_csv'] == True:
-            if os.path.exists(result_file) and c_e['append_csv']==True:
-                data.to_csv(result_file, index = False, float_format= '%8.5f', mode='a')
-            else:
-                data.to_csv(result_file, index = False, float_format= '%8.5f', mode='w')
-            if c_e['aws'] == True:
-                Aws.upload_to_aws(result_file, c_e['bucket'], result_file)
+    # if c_visual['probability_distribution']['plot'] == True:
+    #     generate_probability_distribution_plot(c_p, c_visual['probability_distribution']['models'])
+    
+    # if c_e['save_csv'] == True:
+    #         if os.path.exists(result_file) and c_e['append_csv']==True:
+    #             data.to_csv(result_file, index = False, float_format= '%8.5f', mode='a')
+    #         else:
+    #             data.to_csv(result_file, index = False, float_format= '%8.5f', mode='w')
+    #         if c_e['aws'] == True:
+    #             Aws.upload_to_aws(result_file, c_e['bucket'], result_file)
     
 #name of models, windows, top_ks/threshold
 def generate_confusion_matrix_plot(c_e, all_model_evaluations, model, window, thres, eval_method):

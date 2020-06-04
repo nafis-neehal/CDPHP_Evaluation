@@ -15,7 +15,7 @@ def evaluate(c_p, c_e, c_r, referral, prediction ):
     assert (not(prediction.empty)), "Prediction is empty at the beginning of evaluation"
 
     #assert for column matches between config and data files
-    #check if columns mentioned under c_r['columns'] and c_p['columns'] are available in referral and prediction data
+    #check if columns mentioned under c_r['columns'] and c_p['columns'] are available in referral and prediction datagit push
     assert Helper.column_exists(referral, c_r['columns']), "Column mismatch for referral"
     assert Helper.column_exists(prediction, c_p['columns']), "Column mismatch for prediction"
 
@@ -33,14 +33,14 @@ def evaluate(c_p, c_e, c_r, referral, prediction ):
 
     #convert referral and prediction patient IDs to string
     referral[c_r['columns']['id_column']] = referral[c_r['columns']['id_column']].astype(str)
-    prediction[c_r['columns']['id_column']] = prediction[c_r['columns']['id_column']].astype(str)
+    prediction[c_p['columns']['id_column']] = prediction[c_p['columns']['id_column']].astype(str)
 
     #convert referral and prediction date column to string %Y%M format
     referral[c_r['columns']['date_column']] = pd.to_datetime(referral[c_r['columns']['date_column']]).dt.strftime('%Y%m')
     prediction[c_p['columns']['date_column']] = pd.to_datetime(prediction[c_p['columns']['date_column']], format='%Y%m').dt.strftime('%Y%m')
 
     #set overlap check
-    Helper.overlap_set_check(referral, prediction)
+    Helper.overlap_set_check(c_p, c_r, referral, prediction)
 
     #check if eval date exists in prediction file 
     assert (sum(prediction[c_p['columns']['date_column']]==eval_date)!=0), "Evaluation Month " + eval_date + " doesn't exist in prediction"

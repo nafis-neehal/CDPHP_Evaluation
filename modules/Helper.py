@@ -129,9 +129,9 @@ def date_range(c_p, prediction):
     print("Max Date in Prediction: ",max_date)
 
 #overlap set check
-def overlap_set_check(referral, prediction):
-    r=set(referral['PERSON_ID'].unique())
-    p=set(prediction['PERSON_ID'].unique())
+def overlap_set_check(c_p, c_r, referral, prediction):
+    r=set(referral[c_r['columns']['id_column']].unique())
+    p=set(prediction[c_p['columns']['id_column']].unique())
     print("Number of Unique IDs in Referral:",len(r))
     print("Number of Unique IDs in Prediction:",len(p))
     result=p.intersection(r)
