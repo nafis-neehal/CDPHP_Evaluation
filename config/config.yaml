@@ -46,12 +46,12 @@
   c_e:
     experiment        : 'Version 1.0'
     save_csv          : True
-    append_csv        : False 
+    append_csv        : True 
     dir               : './results/'
     file              : 'results.csv'
-    eval_windows      : [[0,3], [0,6], [0,12]]   
-    eval_date         : '201701'
-    eval_method       : 'both'      
+    eval_windows      : [[-3,6], [0,6]]
+    eval_method       : 'both'
+    eval_date         : None       
     thresholding      : [0.5, 0.6]
     top_k             : [50,60]
     recent_ref_window : 6
@@ -71,6 +71,7 @@
 #plot                 :if you want to see plots (sns.catplot/bar) of comparisons between models. Will be shown for ALL top_k/threshold values.
 #metrics              :list of the metrics you want to see in the plot for all model. Must be a LIST. Can choose single/multiple metrics.
 #window               :list of the evaluation windows you want to see your plots for. Must be a LIST. Can choose single/multiple windows.
+#eval_method          :has to choose either top_k or thresholding. Will be shown for all values for either top_k or thresholding. Model comparison windows MUST be in eval_windows
 
 #CONFUSION MATRIX PLOT (Need to convert to Matplotlib; SNS Version Issue)
 #plot                 :if you want to see plots (sns.heatmap) of confusion matrix. 
@@ -85,22 +86,23 @@
 
   c_visual:
     table : 
-      show            :  True       
+      show            : True         
       metrics         : ['confusion_matrix','precision', 'recall', 'accuracy', 'balanced_acc', 'f1_score', 'log_loss', 
                           'roc_auc_score', 'brier_score_loss']
     model_comparison:
-      plot            : False   
-      metrics         : ['precision','recall', 'accuracy', 'balanced_acc', 'f1_score', 'log_loss', 'roc_auc_score', 
-                          'brier_score_loss']
-      windows         : [[0,3], [0,6]]
+      plot            : True            
+      metrics         : ['precision','recall', 'accuracy', 'balanced_acc', 'f1_score', 'log_loss', 
+                          'roc_auc_score', 'brier_score_loss']
+      windows         : [[-3,6], [0,6]]
+      eval_method     : 'top_k'
     confusion_matrix: 
       plot            : False  
       model           : 'lin_reg'
-      window          : [0,3]
+      window          : [-3,6]
       thres           : 0.5
       eval_method     : 'thresholding'
     probability_distribution: 
-      plot            : False 
+      plot            : False   
       models          : ['lin_reg', 'rand_forest', 'xg_boost', 'sgmm']
   
   
@@ -127,7 +129,7 @@
       model_columns   : ['lin_reg', 'rand_forest', 'xg_boost', 'sgmm'] #generating different model columns
       num_samples     : 500           #don't bother about this, this is just used while generating synthetic data
       start_date      : '2016-01-01'  #prediction starts from January 2016
-      end_date        : '2018-01-01'  #prediction ends on December 2017
+      end_date        : '2017-12-01'  #prediction ends on December 2017
       date_format     : 'ym'
     ref:
       file            : 'referrals.csv'

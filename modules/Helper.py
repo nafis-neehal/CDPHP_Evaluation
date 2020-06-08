@@ -132,17 +132,23 @@ def date_range(c_p, prediction):
 def overlap_set_check(c_p, c_r, referral, prediction):
     r=set(referral[c_r['columns']['id_column']].unique())
     p=set(prediction[c_p['columns']['id_column']].unique())
-    print("Number of Unique IDs in Referral:",len(r))
-    print("Number of Unique IDs in Prediction:",len(p))
+    #print("Number of Unique IDs in Referral:",len(r))
+    #print("Number of Unique IDs in Prediction:",len(p))
     result=p.intersection(r)
-    print("Number of Intersected IDs:", len(result))
+    assert result!=0, "No overlap between Referral and Prediction"
+    #print("Number of Intersected IDs:", len(result))
 
 #boolean assert
 #check if all columns of column_dict from config exists in dataframe(referral/prediction)
 def column_exists(dataframe, column_dict):
     df_columns = list(dataframe.columns)
     config_columns = list(column_dict.values())
-    print("Columns from dataframe (referral/prediction):", df_columns)
-    print("Columns from config(c_r/c_p):", config_columns)
+    #print("Columns from dataframe (referral/prediction):", df_columns)
+    #print("Columns from config(c_r/c_p):", config_columns)
     check =  all(item in df_columns for item in config_columns)
     return check
+
+#returns a list of unique MYRs ascending order
+def eval_date_extract(c_p, prediction):
+    date_list = sorted(prediction[c_p['columns']['date_column']].unique())
+    return [str(i) for i in date_list] 

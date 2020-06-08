@@ -33,10 +33,13 @@ class Score:
         return f1_score(y_true, y_predict, average='binary')
     
     def get_roc_auc_score(self, y_true, y_predict):
-        return roc_auc_score(y_true, y_predict)
+        try:
+            return roc_auc_score(y_true, y_predict, labels=[0.0, 1.0])
+        except ValueError:
+            return 0.0  
     
     def get_log_loss(self, y_true, y_predict):
-        return log_loss(y_true, y_predict)
+        return log_loss(y_true, y_predict, labels=[0.0, 1.0])
 
     def get_brier_score_loss(self, y_true, y_predict):
         return brier_score_loss(y_true, y_predict)

@@ -8,7 +8,7 @@ from IPython.core.display import display
 
 #cp, c_r, c_e are all mutable
 #mutable obj integrity checked
-def evaluate(c_p, c_e, c_r, referral, prediction ):
+def evaluate(c_p, c_e, c_r, referral, prediction):
 
     #assert if referral and prediction dfs both are non-empty
     assert (not(referral.empty)), "Referral is empty at the beginning of evaluation"
@@ -20,11 +20,12 @@ def evaluate(c_p, c_e, c_r, referral, prediction ):
     assert Helper.column_exists(prediction, c_p['columns']), "Column mismatch for prediction"
 
     #extract only the PERSON_ID and MYR column from referral and save it as the new referral dataframe
-    referral = referral[list(c_r['columns'].values())].copy() 
+    referral = referral[list(c_r['columns'].values())].copy()
 
     #model columns extract
-    prediction_columns = list(prediction.columns)
-    all_model_list = prediction_columns[2:]
+    prediction_df_columns = prediction.columns.tolist()
+    date_column_index = prediction.columns.get_loc(c_p['columns']['date_column']) 
+    all_model_list = prediction_df_columns[date_column_index+1:]
     c_p['eval_models'] = all_model_list
     
     #alias
@@ -58,6 +59,12 @@ def evaluate(c_p, c_e, c_r, referral, prediction ):
         prediction = Helper.drop_recent_referrals(c_p, c_r, c_e, eval_date, referral, prediction)
         assert (not(prediction.empty)), "Prediction df is empty after dropping recent referrals"
 
+    #drop duplicates
+    prediction.drop_duplicates(subset=[c_p['columns']['id_column'],c_p['columns']['date_column']], inplace=True)
+
+    #drop negative patient IDs
+    prediction = prediction.loc[prediction['PERSON_ID'].astype(int)>0,:]
+
     #pivot referral table
     referral['target'] = pd.Series(np.ones(referral.shape[0], dtype=float))
     referral = referral.pivot_table(index=c_r['columns']['id_column'], columns=c_r['columns']['date_column'], values='target', aggfunc='sum')
@@ -90,7 +97,7 @@ def evaluate(c_p, c_e, c_r, referral, prediction ):
             
             #aggregate referrals
             y_true = y_true.sum(axis=1)
-            
+                
             #aggregated referral map to 1 if >1
             y_true[y_true>1] = 1
             
