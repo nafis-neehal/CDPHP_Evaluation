@@ -1,3 +1,20 @@
+
+This fixed the issue with missmatched. 
+```
+prediction.drop_duplicates(subset=['PERSON_ID','MYR'], inplace=True)
+```
+This got rid of negative patient ids.
+```
+prediction.loc[prediction['PERSON_ID'].astype(int)>0,:]
+```
+Extract 1 month out of the pmpm file
+```
+pq.write_to_dataset(table, root_path='/home/ec2-user/SageMaker/newdata', partition_cols=['MYR'])
+
+```
+
+
+
 Changes to be implemented: 
 
 THIS IS CAUSING ISSUES: 
