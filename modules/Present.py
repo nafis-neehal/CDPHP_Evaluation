@@ -105,7 +105,10 @@ def generate_comparison_plot(c_e, data, plot_window, metrics, eval_method, eval_
             #in seaborn version 0.9.0 and higher, it is sns.catplot(x,y,hue,data,kind,height,aspect)
             #in seaborn version 0.8.1 it is sns.factorplot(x,y,hue,data,kind,size,aspect) 
             #factorplot is categorical plot on a facetgrid
-            data_plot = sns.factorplot(x="variable", y="value", hue="Model", data=pf_new, kind="bar", size = 4, aspect = 3)
+            if sns.__version__ == '0.8.1':
+                data_plot = sns.factorplot(x="variable", y="value", hue="Model", data=pf_new, kind="bar", size = 4, aspect = 3)
+            else:
+                data_plot = sns.catplot(x="variable", y="value", hue="Model", data=pf_new, kind="bar", height = 4, aspect = 3)
             data_plot.set_xlabels("Metrics")
             data_plot.set_ylabels("Score")
             title = "Performance of Models During " + win + " on eval_date " + str(eval_date) + " with " + eval_method + "_@" + str(t)
