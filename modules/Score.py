@@ -24,7 +24,7 @@ class Score:
         return recall_score(y_true, y_predict, average)
     
     def get_accuracy(self, y_true, y_predict):
-        return recall_score(y_true, y_predict)
+        return accuracy_score(y_true, y_predict)
     
     def get_balanced_acc(self, y_true, y_predict):
         return balanced_accuracy_score(y_true, y_predict)
