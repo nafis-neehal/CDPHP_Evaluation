@@ -5,8 +5,8 @@ import pickle
 
 #--------------------------------------------------
 #add the access keys here (Jason's S3 - RPI Org)
-ACCESS_KEY = 'AKIA2W36TZO4GGFOD2GS'
-SECRET_KEY = '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'
+#ACCESS_KEY = 
+#SECRET_KEY = 
 #--------------------------------------------------
 
 def upload_to_aws(local_file, bucket, s3_file):

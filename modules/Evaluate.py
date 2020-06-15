@@ -29,7 +29,7 @@ def evaluate(c_p, c_e, c_r, referral, prediction):
     c_p['eval_models'] = all_model_list
     
     #alias
-    eval_method = c_e['eval_method']
+    eval_methods = c_e['eval_methods']
     eval_date = c_e['eval_date']
 
     #convert referral and prediction patient IDs to string
@@ -116,31 +116,20 @@ def evaluate(c_p, c_e, c_r, referral, prediction):
                 break
             
             #now thresholding method
-            if eval_method=='top_k':
-                for k_values in c_e['top_k']:
-                    label = model+'_window_['+str(window[0])+','+str(window[1])+']_'+eval_method + '_@k=' + str(k_values)
-                    prediction[label] = Helper.prob_to_bin(prediction[model], k_values)
-                    #model score for this (window,k) update
-                    update_model_score(model, evaluated_model_obj, label, y_true, prediction)
-    
-            elif eval_method == 'thresholding':
-                for thresholds in c_e['thresholding']:
-                    label = model+'_window_['+str(window[0])+','+str(window[1])+']_'+eval_method + '_@p>=' + str(thresholds)
-                    prediction[label] = np.where(prediction[model] > thresholds, 1, 0)
-                    #model score for this (window,threshold) update
-                    update_model_score(model, evaluated_model_obj, label, y_true, prediction)
-
-            elif eval_method == 'both':
-                for k_values in c_e['top_k']:
-                    label = model+'_window_['+str(window[0])+','+str(window[1])+']_'+ 'top_k' + '_@k=' + str(k_values)
-                    prediction[label] = Helper.prob_to_bin(prediction[model], k_values)
-                    #model score for this (window,k) update
-                    update_model_score(model, evaluated_model_obj, label, y_true, prediction)
-                for thresholds in c_e['thresholding']:
-                    label = model+'_window_['+str(window[0])+','+str(window[1])+']_'+ 'thresholding' + '_@p>=' + str(thresholds)
-                    prediction[label] = np.where(prediction[model] > thresholds, 1, 0)
-                    #model score for this (window,threshold) update
-                    update_model_score(model, evaluated_model_obj, label, y_true, prediction)
+            for eval_method in eval_methods:
+                if eval_method=='top_k':
+                    for k_values in c_e['top_k']:
+                        label = model+'_window_['+str(window[0])+','+str(window[1])+']_'+eval_method + '_@k=' + str(k_values)
+                        prediction[label] = Helper.prob_to_bin(prediction[model], k_values)
+                        #model score for this (window,k) update
+                        update_model_score(model, evaluated_model_obj, label, y_true, prediction)
+        
+                elif eval_method == 'thresholding':
+                    for thresholds in c_e['thresholding']:
+                        label = model+'_window_['+str(window[0])+','+str(window[1])+']_'+eval_method + '_@p>=' + str(thresholds)
+                        prediction[label] = np.where(prediction[model] > thresholds, 1, 0)
+                        #model score for this (window,threshold) update
+                        update_model_score(model, evaluated_model_obj, label, y_true, prediction)
             
         all_model_evaluations.update({model:evaluated_model_obj})
     
