@@ -106,7 +106,8 @@ def evaluate(c_p, c_e, c_r, referral, prediction):
             y_true=y_true[y_true.index.isin(prediction[c_p['columns']['id_column']])]
             assert (not(y_true.empty)), "Referral y_true df is empty after overlapping with prediction df"
             
-            y_true=y_true.append(pd.Series(0,index=set(prediction[c_p['columns']['id_column']])-set(y_true.index))).sort_index()
+
+            y_true=y_true.append(pd.Series(0,index=set(prediction[c_p['columns']['id_column']].astype(str))-set(y_true.index.astype(str)))).sort_index()
         
             #their size have to be same -- TO USE the built in metric functions
             if prediction.shape[0]!=len(y_true):

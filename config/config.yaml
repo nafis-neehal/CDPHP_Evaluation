@@ -86,11 +86,11 @@
 
   c_visual:
     table : 
-      show            : True         
+      show            : False         
       metrics         : ['confusion_matrix','precision', 'recall', 'accuracy', 'balanced_acc', 'f1_score', 'log_loss', 
                           'roc_auc_score', 'brier_score_loss']
     model_comparison:
-      plot            : True            
+      plot            : False             
       metrics         : ['precision','recall', 'accuracy', 'balanced_acc', 'f1_score', 'log_loss', 
                           'roc_auc_score', 'brier_score_loss']
       windows         : [[-3,6], [0,6]]
