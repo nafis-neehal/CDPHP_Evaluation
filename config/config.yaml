@@ -50,9 +50,9 @@
     dir               : './results/'
     file              : 'results.csv'
     eval_windows      : [[-3,6], [0,6]]
-    eval_method       : 'both'
+    eval_methods      : ['top_k', 'thresholding']
     eval_date         : None       
-    thresholding      : [0.5, 0.6]
+    thresholding      : [0.5,0.6]
     top_k             : [50,60]
     recent_ref_window : 6
     drop_ref          : True 
@@ -73,7 +73,7 @@
 #window               :list of the evaluation windows you want to see your plots for. Must be a LIST. Can choose single/multiple windows.
 #eval_method          :has to choose either top_k or thresholding. Will be shown for all values for either top_k or thresholding. Model comparison windows MUST be in eval_windows
 
-#CONFUSION MATRIX PLOT (Need to convert to Matplotlib; SNS Version Issue)
+#CONFUSION MATRIX PLOT (Need to convert to Matplotlib; SNS Version Issue; DEPRICATED)
 #plot                 :if you want to see plots (sns.heatmap) of confusion matrix. 
 #model                :name of the model you want to see the confusion matrix for. Only ONE model at a time.
 #window               :window you want to see the confusion matrix for. Only ONE window at a time.
@@ -86,23 +86,19 @@
 
   c_visual:
     table : 
-      show            : False         
+      show            : True           
       metrics         : ['confusion_matrix','precision', 'recall', 'accuracy', 'balanced_acc', 'f1_score', 'log_loss', 
                           'roc_auc_score', 'brier_score_loss']
     model_comparison:
-      plot            : False             
+      plot            : True                 
       metrics         : ['precision','recall', 'accuracy', 'balanced_acc', 'f1_score', 'log_loss', 
                           'roc_auc_score', 'brier_score_loss']
-      windows         : [[-3,6], [0,6]]
-      eval_method     : 'top_k'
-    confusion_matrix: 
-      plot            : False  
-      model           : 'lin_reg'
-      window          : [-3,6]
-      thres           : 0.5
-      eval_method     : 'thresholding'
+    # confusion_matrix: 
+    #   plot            : True   
+    #   model           : 'lin_reg'
+    #   eval_date       : '201701' 
     probability_distribution: 
-      plot            : False   
+      plot            : True   
       models          : ['lin_reg', 'rand_forest', 'xg_boost', 'sgmm']
   
   
