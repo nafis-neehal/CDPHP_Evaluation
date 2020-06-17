@@ -14,11 +14,6 @@ def evaluate(c_p, c_e, c_r, referral, prediction):
     assert (not(referral.empty)), "Referral is empty at the beginning of evaluation"
     assert (not(prediction.empty)), "Prediction is empty at the beginning of evaluation"
 
-    #assert for column matches between config and data files
-    #check if columns mentioned under c_r['columns'] and c_p['columns'] are available in referral and prediction datagit push
-    assert Helper.column_exists(referral, c_r['columns']), "Column mismatch for referral"
-    assert Helper.column_exists(prediction, c_p['columns']), "Column mismatch for prediction"
-
     #extract only the PERSON_ID and MYR column from referral and save it as the new referral dataframe
     referral = referral[list(c_r['columns'].values())].copy()
 
@@ -29,7 +24,7 @@ def evaluate(c_p, c_e, c_r, referral, prediction):
     c_p['eval_models'] = all_model_list
     
     #alias
-    eval_methods = c_e['eval_methods']
+    eval_method = c_e['eval_method']
     eval_date = c_e['eval_date']
 
     #convert referral and prediction patient IDs to string
@@ -106,7 +101,6 @@ def evaluate(c_p, c_e, c_r, referral, prediction):
             y_true=y_true[y_true.index.isin(prediction[c_p['columns']['id_column']])]
             assert (not(y_true.empty)), "Referral y_true df is empty after overlapping with prediction df"
             
-
             y_true=y_true.append(pd.Series(0,index=set(prediction[c_p['columns']['id_column']].astype(str))-set(y_true.index.astype(str)))).sort_index()
         
             #their size have to be same -- TO USE the built in metric functions
@@ -114,22 +108,33 @@ def evaluate(c_p, c_e, c_r, referral, prediction):
                 print("ERROR: PREDICTION AND ACTUAL DATAFRAME HAVE DIFFERENT NUMBERS.  PREDICTION:",
                       prediction.shape[0], " EVALUATION: ",len(y_true))
                 break
-            
+
             #now thresholding method
-            for eval_method in eval_methods:
-                if eval_method=='top_k':
-                    for k_values in c_e['top_k']:
-                        label = model+'_window_['+str(window[0])+','+str(window[1])+']_'+eval_method + '_@k=' + str(k_values)
-                        prediction[label] = Helper.prob_to_bin(prediction[model], k_values)
-                        #model score for this (window,k) update
-                        update_model_score(model, evaluated_model_obj, label, y_true, prediction)
-        
-                elif eval_method == 'thresholding':
-                    for thresholds in c_e['thresholding']:
-                        label = model+'_window_['+str(window[0])+','+str(window[1])+']_'+eval_method + '_@p>=' + str(thresholds)
-                        prediction[label] = np.where(prediction[model] > thresholds, 1, 0)
-                        #model score for this (window,threshold) update
-                        update_model_score(model, evaluated_model_obj, label, y_true, prediction)
+            if eval_method=='top_k':
+                for k_values in c_e['top_k']:
+                    label = model+'_window_['+str(window[0])+','+str(window[1])+']_'+eval_method + '_@k=' + str(k_values)
+                    prediction[label] = Helper.prob_to_bin(prediction[model], k_values)
+                    #model score for this (window,k) update
+                    update_model_score(model, evaluated_model_obj, label, y_true, prediction)
+    
+            elif eval_method == 'thresholding':
+                for thresholds in c_e['thresholding']:
+                    label = model+'_window_['+str(window[0])+','+str(window[1])+']_'+eval_method + '_@p>=' + str(thresholds)
+                    prediction[label] = np.where(prediction[model] > thresholds, 1, 0)
+                    #model score for this (window,threshold) update
+                    update_model_score(model, evaluated_model_obj, label, y_true, prediction)
+
+            elif eval_method == 'both':
+                for k_values in c_e['top_k']:
+                    label = model+'_window_['+str(window[0])+','+str(window[1])+']_'+ 'top_k' + '_@k=' + str(k_values)
+                    prediction[label] = Helper.prob_to_bin(prediction[model], k_values)
+                    #model score for this (window,k) update
+                    update_model_score(model, evaluated_model_obj, label, y_true, prediction)
+                for thresholds in c_e['thresholding']:
+                    label = model+'_window_['+str(window[0])+','+str(window[1])+']_'+ 'thresholding' + '_@p>=' + str(thresholds)
+                    prediction[label] = np.where(prediction[model] > thresholds, 1, 0)
+                    #model score for this (window,threshold) update
+                    update_model_score(model, evaluated_model_obj, label, y_true, prediction)
             
         all_model_evaluations.update({model:evaluated_model_obj})
     
@@ -173,5 +178,3 @@ def update_model_score(model, evaluated_model_obj, label, y_true, prediction):
     
     #add number of samples used by this model
     evaluated_model_obj.experimental_samples = y_true.shape[0]
-    
-    

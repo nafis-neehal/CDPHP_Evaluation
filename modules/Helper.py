@@ -140,11 +140,10 @@ def overlap_set_check(c_p, c_r, referral, prediction):
 
 #boolean assert
 #check if all columns of column_dict from config exists in dataframe(referral/prediction)
-def column_exists(dataframe, column_dict):
-    df_columns = list(dataframe.columns)
+def column_exists(df_columns, column_dict):
     config_columns = list(column_dict.values())
-    #print("Columns from dataframe (referral/prediction):", df_columns)
-    #print("Columns from config(c_r/c_p):", config_columns)
+    print("Columns from dataframe (referral/prediction):", df_columns)
+    print("Columns from config(c_r/c_p):", config_columns)
     check =  all(item in df_columns for item in config_columns)
     return check
 
