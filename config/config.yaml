@@ -13,7 +13,7 @@
   c_r:
     bucket            : 'cdphp.rpi'
     aws               : False
-    dir               : './data/simulated_prediction_data/'
+    dir               : '../data/simulated_health_data/data/'
     file              : 'referrals.csv'
     file_format       : 'csv'
     columns           :      
@@ -86,12 +86,12 @@
 
   c_visual:
     table : 
-      show            : True           
+      show            : False           
       metrics         : ['confusion_matrix','precision', 'recall', 'accuracy', 'balanced_acc', 'f1_score', 'log_loss', 
                           'roc_auc_score', 'brier_score_loss']
     model_comparison:
       plot            : False
-      save            : True                 
+      save            : False                 
       metrics         : ['precision','recall', 'accuracy', 'balanced_acc', 'f1_score', 'log_loss', 
                           'roc_auc_score', 'brier_score_loss']
       dir             : './results/comparisons/'
@@ -101,7 +101,7 @@
     #   eval_date       : '201701' 
     probability_distribution: 
       plot            : False  
-      save            : True      
+      save            : False      
       models          : ['lin_reg', 'rand_forest', 'xg_boost', 'sgmm']
       dir             : './results/distributions/'
   

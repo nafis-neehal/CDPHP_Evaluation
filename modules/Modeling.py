@@ -72,11 +72,12 @@ def perform_regression(cf, train_X, test_X, train_y, test_y, models = REGMODELS)
 
 def perform_classification(train_X, test_X, train_y, test_y, models = CLMODELS):
     train_predict=pd.DataFrame(index=train_X.index)
-    test_predict=pd.DataFrame(index=test_y.index)
+    test_predict=pd.DataFrame(index=test_X.index)
+    
     #Include ground truth in prediction file.
     train_predict['target']=train_y
     test_predict['target']=test_y
-
+    
     trained_models=[]
 
     for name, model in models:

@@ -46,6 +46,9 @@ def present_evaluation(c_e, c_visual):
     #seperate sources of prediction data (male/female)
     #first males will show, then female
     sources = sorted(data['Prediction Source'].unique())
+
+    #show agg data
+    show_agg_data(data)
     
     #show table
     if c_visual['table']['show'] == True:
@@ -71,6 +74,15 @@ def present_evaluation(c_e, c_visual):
 
         comparison_source_counter += 1
         distribution_source_counter += 1
+
+def show_agg_data(data):
+    precision_column_labels = [cols for cols in data.columns.to_list() if 'precision' in cols]
+    accuracy_column_labels = [cols for cols in data.columns.to_list() if 'accuracy' in cols]
+    table = pd.pivot_table(data, values = precision_column_labels + accuracy_column_labels, index = ['Model', 'Prediction Source'])
+    display(table)
+
+
+
     
 #name of models, windows, top_ks/threshold
 def generate_confusion_matrix_plot(c_e, all_model_evaluations, model, window, thres, eval_method, eval_date):
@@ -259,9 +271,9 @@ def generate_tabular_data(c_p, c_r, c_e, c_visual, eval_date, all_model_evaluati
 
             
             #source files
-            data.loc[row, 'Prediction Source'] = c_p['dir'] + c_p['file']
-            data.loc[row, 'Referral Source'] = c_r['dir'] + c_r['file']
-            data.loc[row, 'Result Output'] = c_e['dir'] + c_e['file']
+            data.loc[row, 'Prediction Source'] = c_p['file']
+            data.loc[row, 'Referral Source'] = c_r['file']
+            data.loc[row, 'Result Output'] = c_e['file']
             
             #timestamps
             data.loc[row, 'End Time'] = pd.Timestamp.now(tz='US/Eastern')
