@@ -15,5 +15,9 @@ Directory Structure:
  - Prediction File resides in `./data/predictions/predictions.csv`
  - Referral File resides in `./data/referrals/referrals.csv`
  - Result will be saved in `./results/results.csv`
+ 
+Data in this repository are simulated/toy data. Original data is Proprietary to CDPHP and is not released outside. 
 
 I've followed the same directory structure for local machine and for S3. If any changes made to the directory structure, the config.yaml file should be changed accordingly.
+
+Publication: https://ieeexplore.ieee.org/abstract/document/9669714 
